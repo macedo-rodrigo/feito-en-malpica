@@ -1,0 +1,59 @@
+---
+/**
+ * The seal, in its three sizes.
+ *
+ * Always decorative: the SVG is hidden from assistive technology and the
+ * accessible name comes from whatever wraps it (a link's text, usually
+ * visually hidden). That keeps the mark from being announced twice.
+ *
+ * Clear space is part of the component, not of the file: the brand rule is a
+ * minimum of 20% of the seal's diameter on every side, so it is reserved here
+ * as padding and cannot be forgotten at the call site.
+ *
+ * The artwork itself lives in the page's <SealSprite>, so several seals on
+ * one page cost one copy between them.
+ */
+import { sealSymbolId, SEAL_VIEWBOX, type SealVariant } from '@/lib/brand';
+
+interface Props {
+  /**
+   * full    - faithful artwork, from about 72px up
+   * compact - thickened strokes, for roughly 40-64px
+   * mark    - ring and islands only, below 40px
+   */
+  variant?: SealVariant;
+  /** Diameter of the seal itself, excluding clear space. */
+  size?: string;
+  /** Clear space as a fraction of the diameter. The brand minimum is 0.2. */
+  clearSpace?: number;
+  class?: string;
+}
+
+const { variant = 'full', size = '4rem', clearSpace = 0.2, class: className } = Astro.props;
+---
+
+<span
+  class:list={['seal', className]}
+  style={`--seal-size: ${size}; --seal-clear: ${Math.max(clearSpace, 0.2)};`}
+  aria-hidden="true"
+>
+  <svg viewBox={SEAL_VIEWBOX} fill="currentColor" focusable="false">
+    <use href={`#${sealSymbolId(variant)}`}></use>
+  </svg>
+</span>
+
+<style>
+  .seal {
+    display: grid;
+    place-items: center;
+    padding: calc(var(--seal-size) * var(--seal-clear));
+    line-height: 0;
+    color: inherit;
+  }
+
+  .seal svg {
+    width: var(--seal-size);
+    height: var(--seal-size);
+    fill: currentColor;
+  }
+</style>

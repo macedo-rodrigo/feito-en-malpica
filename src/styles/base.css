@@ -1,0 +1,338 @@
+/*
+  Element styles and the handful of classes shared across pages. Anything
+  used by a single component lives in that component's own <style> block.
+*/
+
+html {
+  color-scheme: light;
+  background-color: var(--surface-page);
+}
+
+body {
+  background-color: var(--surface-page);
+  color: var(--text-body);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  font-weight: var(--weight-body);
+  line-height: var(--leading-body);
+  /* Never let the browser fake a weight the variable font can produce. */
+  font-synthesis-weight: none;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ------------------------------------------------------------- typography */
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-strong);
+}
+
+h1 {
+  font-size: var(--step-5);
+  line-height: var(--leading-tight);
+}
+h2 {
+  font-size: var(--step-3);
+}
+h3 {
+  font-size: var(--step-2);
+}
+h4 {
+  font-size: var(--step-1);
+}
+
+a {
+  color: inherit;
+}
+
+strong,
+b {
+  font-weight: var(--weight-semibold);
+}
+
+::selection {
+  background-color: var(--color-buoy);
+  color: var(--color-foam);
+}
+
+/*
+  One visible focus style everywhere, thick enough to find at a glance. It
+  flips to the warm accent inside dark sections, where ink would vanish.
+*/
+:focus-visible {
+  outline: 2px solid var(--color-sea-deep);
+  outline-offset: 3px;
+  border-radius: var(--radius);
+}
+
+.on-deep :focus-visible {
+  outline-color: var(--color-buoy-bright);
+}
+
+/* --------------------------------------------------------------- structure */
+
+.container {
+  width: min(100% - (var(--gutter) * 2), var(--container));
+  margin-inline: auto;
+}
+
+.container--narrow {
+  --container: var(--container-narrow);
+}
+
+.section {
+  padding-block: var(--section);
+}
+
+.stack > * + * {
+  margin-block-start: var(--flow, var(--space-m));
+}
+
+/*
+  Deep-water panels. The grain sits on a pseudo-element so its opacity can be
+  tuned independently of the fill; `isolation` keeps it behind the content
+  without leaking a negative z-index into the rest of the page.
+*/
+.on-deep {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--surface-deep);
+  color: var(--text-on-deep);
+}
+
+.on-deep::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--texture-grain);
+  background-size: 180px 180px;
+  opacity: 0.055;
+  pointer-events: none;
+}
+
+.on-deep :is(h1, h2, h3, h4) {
+  color: var(--text-on-deep);
+}
+
+/* ---------------------------------------------------------------- labels */
+
+/*
+  The catalogue voice: a small letterspaced label with a rule running off to
+  the end of the line. Used above section headings and on card metadata.
+*/
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  font-family: var(--font-body);
+  font-size: var(--step--2);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.eyebrow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-shell);
+}
+
+.eyebrow--plain::after {
+  display: none;
+}
+
+.on-deep .eyebrow {
+  color: var(--text-on-deep-muted);
+}
+
+.on-deep .eyebrow::after {
+  background-color: rgb(169 192 202 / 0.28);
+}
+
+.lead {
+  font-size: var(--step-1);
+  line-height: var(--leading-snug);
+  color: var(--color-ink-soft);
+  max-width: 34ch;
+}
+
+.on-deep .lead {
+  color: var(--text-on-deep-muted);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------- buttons */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+  padding: 0.9em 1.7em;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: var(--step--1);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.045em;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    background-color var(--duration) var(--ease),
+    border-color var(--duration) var(--ease),
+    color var(--duration) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+.button--primary {
+  background-color: var(--color-buoy);
+  color: var(--color-foam);
+}
+
+.button--primary:hover {
+  background-color: var(--color-buoy-deep);
+}
+
+.button--ghost {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+}
+
+.button--ghost:hover {
+  background-color: var(--color-ink);
+  color: var(--color-foam);
+}
+
+.on-deep .button--ghost {
+  border-color: rgb(246 243 237 / 0.55);
+  color: var(--color-foam);
+}
+
+.on-deep .button--ghost:hover {
+  background-color: var(--color-foam);
+  border-color: var(--color-foam);
+  color: var(--color-ink);
+}
+
+/* ------------------------------------------------------------------ prose */
+
+.prose {
+  max-width: var(--measure);
+}
+
+.prose > * + * {
+  margin-block-start: 1.1em;
+}
+
+.prose > h2 {
+  margin-block-start: 2.2em;
+  font-size: var(--step-2);
+}
+
+.prose > h3 {
+  margin-block-start: 1.8em;
+  font-size: var(--step-1);
+}
+
+/* A short warm rule above each section heading, like a printed chapter mark. */
+.prose > h2::before {
+  content: '';
+  display: block;
+  width: 2.5rem;
+  height: 2px;
+  margin-block-end: 0.75em;
+  background-color: var(--color-buoy);
+}
+
+.prose a {
+  color: var(--color-buoy);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition:
+    text-decoration-thickness var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease);
+}
+
+.prose a:hover {
+  color: var(--color-buoy-deep);
+  text-decoration-thickness: 2px;
+}
+
+.on-deep .prose a {
+  color: var(--color-buoy-bright);
+}
+
+.prose ul {
+  list-style: none;
+  padding-inline-start: 0;
+}
+
+.prose li + li {
+  margin-block-start: 0.55em;
+}
+
+/* Em-dash markers rather than bullets: quieter, and it reads as a printed list. */
+.prose ul > li {
+  position: relative;
+  padding-inline-start: 1.5em;
+}
+
+.prose ul > li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 0.75em;
+  width: 0.75em;
+  height: 1px;
+  background-color: var(--color-buoy);
+}
+
+.prose ol {
+  padding-inline-start: 1.2em;
+}
+
+/* ------------------------------------------------------------- utilities */
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.rule {
+  border: 0;
+  border-block-start: var(--rule);
+}
+
+.on-deep .rule {
+  border-block-start: var(--rule-deep);
+}

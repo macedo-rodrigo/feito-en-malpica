@@ -38,7 +38,7 @@ const PREVIEW_DIR = path.join(root, 'brand/preview');
  * pixel of noise. Output is normalised to VIEWBOX afterwards, so this only
  * affects fidelity and file size, not the final coordinate space.
  */
-const TRACE_WIDTH = 1000;
+const TRACE_WIDTH = 800;
 /** Every variant is emitted in the same square coordinate space. */
 const VIEWBOX = 512;
 
@@ -65,12 +65,13 @@ function traceToSvg(buffer) {
       buffer,
       {
         threshold: 128,
-        turdSize: 6, // drop specks left over from JPEG noise
-        alphaMax: 1.2,
+        turdSize: 5, // drop specks left over from JPEG noise
+        alphaMax: 1.3,
         optCurve: true,
-        // Generous: the source is a hand-drawn stamp, so smoothing away a
-        // fraction of a pixel costs nothing visually and halves the file size.
-        optTolerance: 0.6,
+        // Generous. These files are inlined into every page, so each curve
+        // segment is bytes on the wire; the source is a hand-drawn stamp, and
+        // smoothing away a fraction of a pixel costs nothing that can be seen.
+        optTolerance: 1.1,
         turnPolicy: potrace.Potrace.TURNPOLICY_MINORITY,
         background: 'transparent',
         color: '#000000',
@@ -194,6 +195,21 @@ async function main() {
   const favicon = mark.replace('<svg ', '<svg width="32" height="32" ');
   await writeFile(path.join(PUBLIC_DIR, 'favicon.svg'), favicon);
   report('public/favicon.svg', favicon);
+
+  // Raster fallbacks. iOS ignores transparency on touch icons and composites
+  // them on black, so that one gets the paper background baked in.
+  const inkMark = mark.replace('currentColor', '#14181a');
+  await sharp(Buffer.from(inkMark))
+    .resize(32, 32, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toFile(path.join(PUBLIC_DIR, 'favicon-32.png'));
+  await sharp(Buffer.from(inkMark))
+    .resize(148, 148, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .extend({ top: 16, bottom: 16, left: 16, right: 16, background: '#f6f3ed' })
+    .flatten({ background: '#f6f3ed' })
+    .png()
+    .toFile(path.join(PUBLIC_DIR, 'apple-touch-icon.png'));
+  console.log('  favicon-32.png / apple-touch-icon.png');
 
   await proof('seal', seal, 240, 1);
   await proof('seal', seal, 96, 2);

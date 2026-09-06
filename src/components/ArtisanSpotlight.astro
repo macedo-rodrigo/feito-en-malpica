@@ -1,0 +1,225 @@
+---
+/**
+ * A single artisan given the full width: photograph on one side, the story
+ * and a first look at their pieces on the other.
+ *
+ * This is what the home page uses while the directory is small. Once there
+ * are several featured artisans, the grid of ArtisanCards is the better shape
+ * and this becomes the treatment for one standout.
+ */
+import { Image } from 'astro:assets';
+import type { LocalizedArtisan } from '@/lib/artisans';
+import type { Locale } from '@/i18n/locales';
+import { pathTo } from '@/i18n/routes';
+import { useTranslations } from '@/i18n/ui';
+import { formatPrice } from '@/lib/format';
+
+interface Props {
+  artisan: LocalizedArtisan;
+  locale: Locale;
+}
+
+const { artisan, locale } = Astro.props;
+const t = useTranslations(locale);
+const href = pathTo(locale, 'artisans', artisan.slug);
+const preview = artisan.pieces.slice(0, 4);
+---
+
+<article class="spotlight">
+  <div class="spotlight__media">
+    <Image
+      class="spotlight__portrait"
+      src={artisan.photo.src}
+      alt={artisan.photo.alt}
+      widths={[400, 600, 800, 1000]}
+      sizes="(min-width: 60em) 30rem, 92vw"
+      loading="lazy"
+      decoding="async"
+    />
+  </div>
+
+  <div class="spotlight__body">
+    <p class="spotlight__craft">{t(`craft.${artisan.craft}`)}</p>
+
+    <h3 class="spotlight__name">
+      <a href={href}>{artisan.name}</a>
+    </h3>
+    <p class="spotlight__workshop">{artisan.workshop}</p>
+
+    <p class="spotlight__summary">{artisan.summary}</p>
+
+    <p class="spotlight__meta">
+      <span>{artisan.commissions ? t('artisan.commissionsYes') : t('artisan.commissionsNo')}</span>
+      <span>{artisan.shipping ? t('artisan.shippingYes') : t('artisan.shippingNo')}</span>
+    </p>
+
+    <ul class="spotlight__pieces" role="list">
+      {
+        preview.map((piece) => (
+          <li>
+            <Image
+              class="spotlight__piece-image"
+              src={piece.image}
+              alt={piece.alt}
+              widths={[160, 240, 320]}
+              sizes="(min-width: 60em) 9rem, 28vw"
+              loading="lazy"
+              decoding="async"
+            />
+            <span class="spotlight__piece-title">{piece.title}</span>
+            <span class="spotlight__piece-price">
+              {piece.price === null ? t('artisan.priceOnRequest') : formatPrice(piece.price, locale)}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="spotlight__cta">
+      <a class="button button--ghost" href={href} aria-label={t('artisans.viewProfile', { name: artisan.name })}>
+        {t('artisan.viewProfile')}
+      </a>
+    </p>
+  </div>
+</article>
+
+<style>
+  .spotlight {
+    display: grid;
+    gap: var(--space-xl);
+    align-items: start;
+  }
+
+  @media (min-width: 60em) {
+    .spotlight {
+      grid-template-columns: minmax(0, 27rem) minmax(0, 1fr);
+      gap: var(--space-3xl);
+    }
+  }
+
+  .spotlight__media {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background-color: var(--color-shell);
+  }
+
+  /* A thin warm rule tucked along the foot of the portrait. */
+  .spotlight__media::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    height: 4px;
+    background-color: var(--color-buoy);
+  }
+
+  .spotlight__portrait {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+
+  .spotlight__craft {
+    font-size: var(--step--2);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-buoy);
+  }
+
+  .spotlight__name {
+    margin-block-start: var(--space-2xs);
+    font-size: var(--step-4);
+    line-height: var(--leading-display);
+  }
+
+  .spotlight__name a {
+    text-decoration: none;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 2px;
+    transition: background-size var(--duration) var(--ease);
+  }
+
+  .spotlight__name a:hover,
+  .spotlight__name a:focus-visible {
+    background-size: 100% 2px;
+  }
+
+  .spotlight__workshop {
+    margin-block-start: var(--space-3xs);
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    color: var(--text-muted);
+  }
+
+  .spotlight__summary {
+    max-width: 48ch;
+    margin-block-start: var(--space-m);
+    font-size: var(--step-0);
+    color: var(--color-ink-soft);
+  }
+
+  .spotlight__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs) var(--space-s);
+    margin-block-start: var(--space-m);
+    font-size: var(--step--2);
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+  }
+
+  .spotlight__meta span + span::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    margin-inline-end: var(--space-s);
+    border-radius: 50%;
+    background-color: var(--color-buoy);
+    vertical-align: 0.25em;
+  }
+
+  .spotlight__pieces {
+    display: grid;
+    /* Fills the column rather than leaving dead space beside the portrait. */
+    grid-template-columns: repeat(auto-fit, minmax(min(8rem, 45%), 1fr));
+    gap: var(--space-m) var(--space-s);
+    margin-block-start: var(--space-l);
+    padding-block-start: var(--space-l);
+    border-block-start: var(--rule);
+    padding-inline-start: 0;
+    list-style: none;
+  }
+
+  .spotlight__pieces li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3xs);
+  }
+
+  .spotlight__piece-image {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: var(--radius);
+    margin-block-end: var(--space-2xs);
+  }
+
+  .spotlight__piece-title {
+    font-size: var(--step--2);
+    line-height: var(--leading-snug);
+  }
+
+  .spotlight__piece-price {
+    font-size: var(--step--2);
+    color: var(--text-muted);
+  }
+
+  .spotlight__cta {
+    margin-block-start: var(--space-l);
+  }
+</style>

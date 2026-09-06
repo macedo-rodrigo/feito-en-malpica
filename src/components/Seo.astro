@@ -1,0 +1,81 @@
+---
+/**
+ * Everything that belongs in <head> for a single page: unique title, meta
+ * description, canonical URL, the three hreflang alternates and the Open
+ * Graph / Twitter card.
+ *
+ * Every absolute URL is derived from `site` in astro.config.mjs, so pointing
+ * the project at a real domain is a one-line change.
+ */
+import { LOCALES, type Locale } from '@/i18n/locales';
+import { alternates, pathTo, type PageKey } from '@/i18n/routes';
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description: string;
+  /** Which page this is, so the alternates can point at its translations. */
+  page: PageKey;
+  /** Artisan slug, for pages under /artesans/. */
+  slug?: string;
+  /** Absolute or root-relative path to the share image. */
+  ogImage?: string;
+  ogImageAlt?: string;
+  type?: 'website' | 'article' | 'profile';
+}
+
+const {
+  locale,
+  title,
+  description,
+  page,
+  slug,
+  ogImage = '/og/default.jpg',
+  ogImageAlt = 'Feito en Malpica: as Illas Sisargas vistas desde o peirao.',
+  type = 'website',
+} = Astro.props;
+
+const site = Astro.site ?? new URL('http://localhost:4321');
+const canonical = new URL(pathTo(locale, page, slug), site);
+const shareImage = new URL(ogImage, site);
+
+/** Open Graph wants a territory; hreflang is happier with the bare language. */
+const OG_LOCALES: Record<Locale, string> = {
+  gl: 'gl_ES',
+  es: 'es_ES',
+  en: 'en_GB',
+};
+
+const links = alternates(page, slug);
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical.href} />
+
+{
+  links.map(({ locale: alternate, path }) => (
+    <link rel="alternate" hreflang={alternate} href={new URL(path, site).href} />
+  ))
+}
+<link rel="alternate" hreflang="x-default" href={new URL(pathTo('gl', page, slug), site).href} />
+
+<meta property="og:site_name" content="Feito en Malpica" />
+<meta property="og:type" content={type} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical.href} />
+<meta property="og:image" content={shareImage.href} />
+<meta property="og:image:alt" content={ogImageAlt} />
+<meta property="og:locale" content={OG_LOCALES[locale]} />
+{
+  LOCALES.filter((other) => other !== locale).map((other) => (
+    <meta property="og:locale:alternate" content={OG_LOCALES[other]} />
+  ))
+}
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={shareImage.href} />
+<meta name="twitter:image:alt" content={ogImageAlt} />

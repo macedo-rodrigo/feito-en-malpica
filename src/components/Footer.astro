@@ -1,0 +1,153 @@
+---
+/**
+ * Deep-water footer. This is where the seal gets to be shown at full size,
+ * in white on dark, with the clear space the brand rules ask for.
+ */
+import Seal from './Seal.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import type { Locale } from '@/i18n/locales';
+import { pathTo, type PageKey } from '@/i18n/routes';
+import { useTranslations } from '@/i18n/ui';
+
+interface Props {
+  locale: Locale;
+  page: PageKey;
+  slug?: string;
+}
+
+const { locale, page, slug } = Astro.props;
+const t = useTranslations(locale);
+const year = new Date().getFullYear();
+
+const items: { key: PageKey; label: string }[] = [
+  { key: 'home', label: t('nav.home') },
+  { key: 'artisans', label: t('nav.artisans') },
+  { key: 'about', label: t('nav.about') },
+  { key: 'join', label: t('nav.join') },
+];
+---
+
+<footer class="site-footer on-deep">
+  <div class="container">
+    <div class="footer-main">
+      <div class="footer-brand">
+        <a class="footer-seal" href={pathTo(locale, 'home')}>
+          <Seal variant="full" size="7.5rem" />
+          <span class="visually-hidden">Feito en Malpica — {t('nav.home')}</span>
+        </a>
+        <p class="footer-about">{t('footer.about')}</p>
+      </div>
+
+      <nav class="footer-nav" aria-label={t('footer.nav')}>
+        <p class="eyebrow eyebrow--plain">{t('site.tagline')}</p>
+        <ul role="list">
+          {
+            items.map((item) => (
+              <li>
+                <a href={pathTo(locale, item.key)} aria-current={page === item.key ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </div>
+
+    <hr class="rule" />
+
+    <div class="footer-bottom">
+      <p class="footer-credits">
+        <span>&copy; {year}</span>
+        <span>{t('footer.credits')}</span>
+      </p>
+      <LanguageSwitcher locale={locale} page={page} slug={slug} />
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-block-start: auto;
+    padding-block: var(--section) var(--space-xl);
+  }
+
+  .footer-main {
+    display: grid;
+    gap: var(--space-2xl) var(--space-3xl);
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  @media (min-width: 48em) {
+    .footer-main {
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    }
+  }
+
+  .footer-seal {
+    display: inline-block;
+    /* Cancels the seal's clear space against the container edge. */
+    margin-inline-start: -1.5rem;
+    color: var(--color-foam);
+    text-decoration: none;
+    transition: opacity var(--duration) var(--ease);
+  }
+
+  .footer-seal:hover {
+    opacity: 0.82;
+  }
+
+  .footer-about {
+    max-width: 42ch;
+    margin-block-start: var(--space-s);
+    color: var(--text-on-deep-muted);
+    font-size: var(--step--1);
+    line-height: var(--leading-body);
+  }
+
+  .footer-nav ul {
+    display: grid;
+    gap: var(--space-xs);
+    margin-block-start: var(--space-m);
+    padding: 0;
+    list-style: none;
+  }
+
+  .footer-nav a {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    text-decoration: none;
+    transition: color var(--duration-fast) var(--ease);
+  }
+
+  .footer-nav a:hover {
+    color: var(--color-buoy-bright);
+  }
+
+  .footer-nav a[aria-current='page'] {
+    color: var(--color-buoy-bright);
+  }
+
+  .rule {
+    margin-block: var(--space-2xl) var(--space-m);
+  }
+
+  .footer-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-m);
+  }
+
+  .footer-credits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs) var(--space-s);
+    font-size: var(--step--2);
+    letter-spacing: 0.02em;
+    color: var(--text-on-deep-muted);
+  }
+</style>

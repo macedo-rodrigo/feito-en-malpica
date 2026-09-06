@@ -1,0 +1,155 @@
+/*
+  Design tokens for Feito en Malpica.
+
+  The palette comes from the place: deep Atlantic blue, wet granite, the warm
+  off-white of sea foam and printed paper, and one warm accent taken from the
+  orange of a marker buoy. Ink black is for text and for the seal.
+
+  Every text/background pair used in the site is verified against WCAG AA by
+  `npm run check:contrast`, which reads the values straight out of this file.
+*/
+
+:root {
+  /* ---------------------------------------------------------------- colour */
+
+  /* Text and the seal. Never pure black: it reads harsh on warm paper. */
+  --color-ink: #14181a;
+  --color-ink-soft: #3a4348;
+
+  /* Paper. Warm rather than white, so photographs sit on it without glare. */
+  --color-foam: #f6f3ed;
+  --color-paper: #fffdf9;
+  --color-shell: #e4ded3;
+
+  /* Wet granite, for secondary text and quiet metadata. */
+  --color-granite: #56605f;
+
+  /* Deep water, for the hero, the footer and anything that needs weight. */
+  --color-sea-deep: #0a2431;
+  --color-sea: #123a4d;
+  --color-sea-mist: #a9c0ca;
+
+  /* Buoy orange. Two cuts: one that holds contrast on paper, one on water. */
+  --color-buoy: #b8431a;
+  --color-buoy-deep: #94330f;
+  --color-buoy-bright: #e2723f;
+
+  /* --------------------------------------------------------------- surfaces */
+
+  --surface-page: var(--color-foam);
+  --surface-raised: var(--color-paper);
+  --surface-deep: var(--color-sea-deep);
+
+  --text-strong: var(--color-ink);
+  --text-body: var(--color-ink);
+  --text-muted: var(--color-granite);
+  --text-on-deep: var(--color-foam);
+  --text-on-deep-muted: var(--color-sea-mist);
+
+  /* ------------------------------------------------------------ typography */
+
+  --font-display: 'Fraunces Variable', 'Iowan Old Style', 'Palatino Linotype',
+    'Book Antiqua', Georgia, serif;
+  --font-body: 'Public Sans Variable', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /*
+    Fluid type scale, 1rem to 1.125rem at the base with a ~1.28 ratio on small
+    screens opening to ~1.33 on large ones. The two display steps are set on
+    the assumption that Fraunces' optical size axis handles the rest.
+  */
+  --step--2: clamp(0.75rem, 0.73rem + 0.1vw, 0.8125rem);
+  --step--1: clamp(0.875rem, 0.85rem + 0.13vw, 0.9375rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --step-1: clamp(1.1875rem, 1.11rem + 0.38vw, 1.4375rem);
+  --step-2: clamp(1.4375rem, 1.29rem + 0.72vw, 1.875rem);
+  --step-3: clamp(1.75rem, 1.5rem + 1.25vw, 2.5rem);
+  --step-4: clamp(2.125rem, 1.68rem + 2.2vw, 3.5rem);
+  --step-5: clamp(2.625rem, 1.72rem + 4.5vw, 5.25rem);
+
+  --leading-tight: 1.06;
+  --leading-display: 1.12;
+  --leading-snug: 1.32;
+  --leading-body: 1.65;
+
+  /* Letterspaced small caps for eyebrows and labels: the catalogue voice. */
+  --tracking-label: 0.14em;
+  --tracking-tight: -0.015em;
+
+  --weight-body: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-display: 500;
+
+  /* ---------------------------------------------------------------- space */
+
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-s: 1rem;
+  --space-m: 1.5rem;
+  --space-l: 2rem;
+  --space-xl: 3rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+
+  /* Breathing room between major sections, and the page's side margin. */
+  --section: clamp(3.5rem, 2rem + 6.5vw, 7.5rem);
+  --gutter: clamp(1.25rem, 0.85rem + 1.8vw, 2.5rem);
+
+  /* ------------------------------------------------------------ structure */
+
+  --container: 76rem;
+  --container-narrow: 44rem;
+  /*
+    Reading measure. `ch` is the width of a zero, which in these faces is far
+    wider than the average lowercase letter, so 54ch lands at roughly 68
+    characters per line - the comfortable range. Measured, not assumed.
+  */
+  --measure: 54ch;
+
+  /*
+    Fixed, because pages with a dark hero pull their content up by exactly
+    this much so the header can sit over the photograph.
+  */
+  --header-height: 4.75rem;
+
+  /*
+    Corners stay nearly square. This is a printed-catalogue look, not an app:
+    large radii are the fastest way to make it read as a generic template.
+  */
+  --radius: 2px;
+  --radius-lg: 4px;
+
+  --rule: 1px solid var(--color-shell);
+  --rule-deep: 1px solid rgb(169 192 202 / 0.22);
+
+  /*
+    Shadows are used sparingly and never for decoration - hairlines carry the
+    structure instead.
+  */
+  --shadow-card: 0 1px 2px rgb(20 24 26 / 0.05), 0 12px 28px -18px rgb(20 24 26 / 0.35);
+  --shadow-lifted: 0 2px 4px rgb(20 24 26 / 0.06), 0 22px 44px -22px rgb(20 24 26 / 0.4);
+
+  /* ---------------------------------------------------------------- motion */
+
+  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 140ms;
+  --duration: 240ms;
+  --duration-slow: 460ms;
+
+  /* --------------------------------------------------------------- texture */
+
+  /*
+    Fine film grain, inlined as SVG so it costs no request. Laid over flat
+    colour it stops large fills reading as plastic.
+  */
+  --texture-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+
+  /* ----------------------------------------------------------------- layer */
+
+  --z-header: 100;
+  --z-menu: 200;
+  --z-skip: 300;
+}

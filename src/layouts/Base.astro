@@ -1,0 +1,147 @@
+---
+/**
+ * The shell every page sits in: head, skip link, header, main, footer.
+ */
+import '@/styles/global.css';
+import Seo from '@/components/Seo.astro';
+import SealSprite from '@/components/SealSprite.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import type { Locale } from '@/i18n/locales';
+import type { PageKey } from '@/i18n/routes';
+import { useTranslations } from '@/i18n/ui';
+
+interface Props {
+  locale: Locale;
+  /** Browser tab and share title. Unique per page. */
+  title: string;
+  description: string;
+  page: PageKey;
+  slug?: string;
+  ogImage?: string;
+  ogImageAlt?: string;
+  type?: 'website' | 'article' | 'profile';
+  /** Set on pages that open with a dark full-bleed hero. */
+  overHero?: boolean;
+  class?: string;
+}
+
+const {
+  locale,
+  title,
+  description,
+  page,
+  slug,
+  ogImage,
+  ogImageAlt,
+  type,
+  overHero = false,
+  class: className,
+} = Astro.props;
+
+const t = useTranslations(locale);
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!--
+      Marks the document before first paint so CSS can tell the two cases
+      apart: with JavaScript the mobile nav collapses behind a button,
+      without it the links stay visible.
+    -->
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
+
+    <link rel="preload" href="/fonts/fraunces-latin-variable.woff2" as="font" type="font/woff2" crossorigin />
+    <link
+      rel="preload"
+      href="/fonts/public-sans-latin-variable.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#f6f3ed" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <Seo
+      locale={locale}
+      title={title}
+      description={description}
+      page={page}
+      slug={slug}
+      ogImage={ogImage}
+      ogImageAlt={ogImageAlt}
+      type={type}
+    />
+  </head>
+
+  <body>
+    <SealSprite />
+
+    <a class="skip-link" href="#main">{t('nav.skip')}</a>
+
+    <!-- Watched by the header to know when the page has scrolled. -->
+    <div id="scroll-sentinel" aria-hidden="true"></div>
+
+    <Header locale={locale} page={page} slug={slug} overHero={overHero} />
+
+    <main id="main" class:list={[className, { 'is-over-hero': overHero }]}>
+      <slot />
+    </main>
+
+    <Footer locale={locale} page={page} slug={slug} />
+  </body>
+</html>
+
+<style>
+  .skip-link {
+    position: absolute;
+    z-index: var(--z-skip);
+    inset-inline-start: var(--gutter);
+    inset-block-start: 0;
+    padding: var(--space-xs) var(--space-m);
+    background-color: var(--color-ink);
+    color: var(--color-foam);
+    font-size: var(--step--1);
+    font-weight: var(--weight-semibold);
+    text-decoration: none;
+    border-end-start-radius: var(--radius);
+    border-end-end-radius: var(--radius);
+    /* Off-screen until focused, rather than hidden - it must stay reachable. */
+    transform: translateY(-110%);
+    transition: transform var(--duration) var(--ease);
+  }
+
+  .skip-link:focus-visible {
+    transform: translateY(0);
+  }
+
+  #scroll-sentinel {
+    position: absolute;
+    top: 0;
+    height: 1px;
+    width: 1px;
+  }
+
+  main {
+    flex: 1;
+  }
+
+  /*
+    The header is sticky and therefore in normal flow, so a hero would start
+    below it. Pulling the content up by exactly the header's height puts the
+    photograph behind it, which is what makes the transparent state possible.
+  */
+  main.is-over-hero {
+    margin-block-start: calc(var(--header-height) * -1);
+  }
+</style>

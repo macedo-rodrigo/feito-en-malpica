@@ -29,9 +29,12 @@ de datos.
 ### Scripts auxiliares
 
 ```bash
-npm run brand:trace           # revectoriza o logo desde brand/source/
-npm run images:placeholders   # xera imaxes de exemplo que falten
 npm run check                 # comproba tipos e contido
+npm run check:contrast        # verifica o contraste da paleta contra WCAG AA
+npm run brand:trace           # revectoriza o logo desde brand/source/
+npm run fonts:sync            # copia as tipografías a public/fonts/
+npm run images:placeholders   # xera imaxes de exemplo que falten
+npm run shots                 # capturas de dist/ para revisar o deseño
 ```
 
 ---
@@ -184,9 +187,10 @@ src/
 ├── layouts/            armazón común das páxinas
 ├── lib/                utilidades (enlaces de contacto, formato de prezos)
 ├── pages/              unha carpeta por idioma; define os enderezos
-└── styles/             CSS global e variables
+├── styles/             CSS global e variables de deseño
+└── views/              o contido de cada páxina, compartido polos 3 idiomas
 
-public/                 ficheiros que se copian tal cal (favicon, og/)
+public/                 ficheiros que se copian tal cal (favicon, fontes, og/)
 scripts/                utilidades de desenvolvemento
 brand/                  material de marca e o logo orixinal
 tests/                  probas de extremo a extremo (Playwright)
@@ -194,6 +198,27 @@ tests/                  probas de extremo a extremo (Playwright)
 
 `src/content.config.ts` define que campos leva cada ficha e cales son
 obrigatorios.
+
+Os ficheiros de `src/pages/` son só tres liñas cada un: cargan a vista
+correspondente de `src/views/` pasándolle o idioma. Así as tres versións dunha
+páxina non poden separarse na estrutura, só no texto que cargan.
+
+---
+
+## Deseño
+
+Todo o sistema visual está en `src/styles/tokens.css`: cores, escala
+tipográfica, espazos, sombras e tempos de animación. Cambiar un valor alí
+cámbiao en todo o sitio.
+
+- **Paleta**: azuis de mar profundo, gris granito, branco espuma e un laranxa
+  de boia como único acento. Negro tinta para o texto e o selo.
+- **Tipografía**: Fraunces nos titulares (co eixo óptico activo, que afina os
+  remates nos tamaños grandes) e Public Sans no corpo. As dúas van no propio
+  servidor: o sitio non fai ningunha petición a terceiros.
+- **Contraste**: `npm run check:contrast` comproba cada parella de cor
+  texto/fondo que o sitio usa realmente contra o mínimo AA de WCAG, lendo os
+  valores de `tokens.css`. Se algunha baixa do limiar, sae con erro.
 
 ---
 

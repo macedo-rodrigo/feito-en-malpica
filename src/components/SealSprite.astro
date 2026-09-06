@@ -1,0 +1,29 @@
+---
+/**
+ * Emits the seal artwork once per page, hidden, for <Seal> to reference.
+ * Rendered by the base layout immediately inside <body>, before anything that
+ * uses it.
+ */
+import { SEAL_ARTWORK, SEAL_VIEWBOX, sealSymbolId, type SealVariant } from '@/lib/brand';
+
+const variants = Object.keys(SEAL_ARTWORK) as SealVariant[];
+---
+
+<svg class="seal-sprite" aria-hidden="true" focusable="false" width="0" height="0">
+  {
+    variants.map((variant) => (
+      <symbol id={sealSymbolId(variant)} viewBox={SEAL_VIEWBOX} fill-rule="evenodd">
+        <Fragment set:html={SEAL_ARTWORK[variant]} />
+      </symbol>
+    ))
+  }
+</svg>
+
+<style>
+  .seal-sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+</style>

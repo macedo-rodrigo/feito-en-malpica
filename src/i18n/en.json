@@ -14,6 +14,7 @@
   "nav.language": "Language",
   "nav.languageOther": "Read this page in {language}",
 
+  "home.heroAlt": "The Sisargas Islands silhouetted against the sea, seen from the quay at Malpica.",
   "home.featuredTitle": "Featured makers",
   "home.featuredAll": "See all the makers",
   "home.valueTitle": "A shop window, not a shop",
@@ -62,6 +63,7 @@
   "artisan.shippingNo": "Collection at the workshop",
   "artisan.priceOnRequest": "On request",
   "artisan.priceLabel": "Price",
+  "artisan.viewProfile": "See the full page",
   "artisan.back": "All the makers",
   "artisan.mailSubject": "Enquiry from Feito en Malpica",
   "artisan.mailBody": "Hello {name},\n\nI saw your work on Feito en Malpica and I would like to ask you about...",

@@ -14,12 +14,13 @@
   "nav.language": "Idioma",
   "nav.languageOther": "Ler esta páxina en {language}",
 
+  "home.heroAlt": "As Illas Sisargas recortadas sobre o mar, vistas desde o peirao de Malpica.",
   "home.featuredTitle": "Artesáns destacados",
   "home.featuredAll": "Ver todos os artesáns",
   "home.valueTitle": "Un escaparate, non unha tenda",
   "home.aboutTitle": "Malpica de Bergantiños",
   "home.aboutMore": "Máis sobre o proxecto",
-  "home.joinTitle": "Traballas cas mans en Malpica?",
+  "home.joinTitle": "Traballas coas mans en Malpica?",
   "home.joinCta": "Aparece nesta web",
 
   "artisans.searchLabel": "Buscar artesáns",
@@ -62,6 +63,7 @@
   "artisan.shippingNo": "Recollida no obradoiro",
   "artisan.priceOnRequest": "Consultar",
   "artisan.priceLabel": "Prezo",
+  "artisan.viewProfile": "Ver a ficha",
   "artisan.back": "Todos os artesáns",
   "artisan.mailSubject": "Consulta desde Feito en Malpica",
   "artisan.mailBody": "Ola, {name}:\n\nVin o teu traballo en Feito en Malpica e gustaríame preguntarche por...",

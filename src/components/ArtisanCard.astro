@@ -1,0 +1,186 @@
+---
+/**
+ * One artisan in a listing. Used on the home page and on the artisans index.
+ *
+ * Only the name is a real link; it is stretched over the whole card with a
+ * pseudo-element. That way the card is one tab stop with a sensible
+ * accessible name, instead of three links pointing at the same page.
+ */
+import { Image } from 'astro:assets';
+import type { LocalizedArtisan } from '@/lib/artisans';
+import type { Locale } from '@/i18n/locales';
+import { pathTo } from '@/i18n/routes';
+import { useTranslations } from '@/i18n/ui';
+
+interface Props {
+  artisan: LocalizedArtisan;
+  locale: Locale;
+  /** Catalogue number shown over the photograph. */
+  index?: number;
+  /** True for cards above the fold, so their image is not lazily loaded. */
+  priority?: boolean;
+}
+
+const { artisan, locale, index, priority = false } = Astro.props;
+const t = useTranslations(locale);
+---
+
+<article class="card">
+  <div class="card__media">
+    <Image
+      class="card__image"
+      src={artisan.photo.src}
+      alt={artisan.photo.alt}
+      widths={[320, 480, 640, 800]}
+      sizes="(min-width: 64em) 22rem, (min-width: 40em) 44vw, 88vw"
+      loading={priority ? 'eager' : 'lazy'}
+      decoding={priority ? 'sync' : 'async'}
+    />
+    {index !== undefined && <span class="card__index" aria-hidden="true">{String(index).padStart(2, '0')}</span>}
+  </div>
+
+  <div class="card__body">
+    <p class="card__craft">{t(`craft.${artisan.craft}`)}</p>
+
+    <h3 class="card__name">
+      <a href={pathTo(locale, 'artisans', artisan.slug)}>{artisan.name}</a>
+    </h3>
+
+    <p class="card__workshop">{artisan.workshop}</p>
+    <p class="card__summary">{artisan.summary}</p>
+
+    <p class="card__meta">
+      <span>{artisan.commissions ? t('artisan.commissionsYes') : t('artisan.commissionsNo')}</span>
+      <span>{artisan.shipping ? t('artisan.shippingYes') : t('artisan.shippingNo')}</span>
+    </p>
+  </div>
+</article>
+
+<style>
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--surface-raised);
+    border: var(--rule);
+    border-radius: var(--radius);
+    transition:
+      border-color var(--duration) var(--ease),
+      box-shadow var(--duration) var(--ease),
+      transform var(--duration) var(--ease);
+  }
+
+  .card:hover,
+  .card:focus-within {
+    border-color: rgb(20 24 26 / 0.18);
+    box-shadow: var(--shadow-lifted);
+    transform: translateY(-3px);
+  }
+
+  .card__media {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--color-shell);
+  }
+
+  .card__image {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    transition: transform var(--duration-slow) var(--ease-out);
+  }
+
+  .card:hover .card__image {
+    transform: scale(1.035);
+  }
+
+  /* Catalogue number, set over the darkest corner of the photograph. */
+  .card__index {
+    position: absolute;
+    inset-block-start: var(--space-s);
+    inset-inline-start: var(--space-s);
+    padding: 0.3em 0.55em;
+    background-color: rgb(10 36 49 / 0.72);
+    color: var(--color-foam);
+    font-size: var(--step--2);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    line-height: 1;
+  }
+
+  .card__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+    padding: var(--space-m) var(--space-m) var(--space-l);
+  }
+
+  .card__craft {
+    font-size: var(--step--2);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-buoy);
+  }
+
+  .card__name {
+    font-size: var(--step-2);
+    line-height: var(--leading-snug);
+  }
+
+  .card__name a {
+    text-decoration: none;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 1px;
+    transition: background-size var(--duration) var(--ease);
+  }
+
+  .card:hover .card__name a,
+  .card__name a:focus-visible {
+    background-size: 100% 1px;
+  }
+
+  /* Stretches the link over the card without adding another tab stop. */
+  .card__name a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .card__workshop {
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .card__summary {
+    margin-block-start: var(--space-2xs);
+    font-size: var(--step--1);
+    line-height: var(--leading-body);
+    color: var(--color-ink-soft);
+  }
+
+  .card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs) var(--space-s);
+    margin-block-start: var(--space-s);
+    padding-block-start: var(--space-s);
+    border-block-start: var(--rule);
+    font-size: var(--step--2);
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+  }
+
+  .card__meta span + span::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    margin-inline-end: var(--space-s);
+    border-radius: 50%;
+    background-color: var(--color-buoy);
+    vertical-align: 0.25em;
+  }
+</style>

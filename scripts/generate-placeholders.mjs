@@ -28,6 +28,7 @@ const C = {
   foam: '#f4f1ec',
   foamShade: '#e3ddd3',
   buoy: '#d1552b',
+  buoyDeep: '#94330f',
   ink: '#14181a',
 };
 
@@ -130,32 +131,78 @@ function seascape(w, h, label, rand) {
     <path d="${hump(w * 0.5, w * 0.78, islandBase, h * 0.08, 0.45)}" fill="${C.ink}" fill-opacity="0.6"/>
     <rect y="${horizon - 1}" width="${w}" height="2" fill="${C.foam}" fill-opacity="0.25"/>
     <circle cx="${Math.round(w * 0.86)}" cy="${Math.round(horizon + h * 0.12)}" r="${Math.round(w * 0.008)}" fill="${C.buoy}"/>
-    ${caption(label, w, h, C.foam)}
   `;
+  // No caption: this one runs full-bleed behind the hero headline, where a
+  // stray line of text reads as a rendering bug rather than as a placeholder.
+}
+
+/**
+ * Object placeholders. Each piece gets a different silhouette and a different
+ * material, picked from its own filename, so a gallery of six does not read
+ * as the same grey square repeated six times.
+ */
+const OBJECT_MATERIALS = [
+  [C.graniteLight, C.granite],
+  [C.seaMist, C.sea],
+  [C.foamShade, C.granite],
+  [C.buoy, C.buoyDeep],
+  [C.granite, C.ink],
+];
+
+function objectShape(kind, cx, cy, s) {
+  switch (kind) {
+    // A lamp or a vase: a body with a narrow neck.
+    case 0:
+      return `
+        <rect x="${cx - s * 0.2}" y="${cy - s * 1.05}" width="${s * 0.4}" height="${s * 0.55}" rx="${s * 0.08}" fill="url(#body)"/>
+        <ellipse cx="${cx}" cy="${cy + s * 0.2}" rx="${s * 0.78}" ry="${s * 0.82}" fill="url(#body)"/>`;
+    // A disc: a plate, a lid, a keyring.
+    case 1:
+      return `
+        <circle cx="${cx}" cy="${cy}" r="${s * 0.88}" fill="url(#body)"/>
+        <circle cx="${cx}" cy="${cy}" r="${s * 0.3}" fill="${C.foam}" fill-opacity="0.35"/>`;
+    // A tower: the lighthouse.
+    case 2:
+      return `
+        <path d="M${cx - s * 0.3} ${cy + s} L${cx - s * 0.2} ${cy - s * 0.85} L${cx + s * 0.2} ${cy - s * 0.85} L${cx + s * 0.3} ${cy + s}Z" fill="url(#body)"/>
+        <rect x="${cx - s * 0.34}" y="${cy - s * 1.05}" width="${s * 0.68}" height="${s * 0.22}" rx="${s * 0.05}" fill="url(#body)"/>`;
+    // A hull: the gamela, seen from the side.
+    case 3:
+      return `
+        <path d="M${cx - s} ${cy - s * 0.3} L${cx + s} ${cy - s * 0.3} C${cx + s * 0.75} ${cy + s * 0.72} ${cx - s * 0.75} ${cy + s * 0.72} ${cx - s} ${cy - s * 0.3}Z" fill="url(#body)"/>
+        <rect x="${cx - s * 0.05}" y="${cy - s * 1.1}" width="${s * 0.1}" height="${s * 0.8}" fill="url(#body)"/>`;
+    // A block: a mechanical part.
+    default:
+      return `
+        <rect x="${cx - s * 0.85}" y="${cy - s * 0.75}" width="${s * 1.7}" height="${s * 1.5}" rx="${s * 0.16}" fill="url(#body)"/>
+        <circle cx="${cx}" cy="${cy}" r="${s * 0.34}" fill="${C.foam}" fill-opacity="0.4"/>`;
+  }
 }
 
 function object(w, h, label, rand) {
   const cx = w / 2;
-  const cy = h * 0.52;
-  const r = w * (0.22 + rand() * 0.06);
-  const tilt = -12 + rand() * 24;
+  const cy = h * 0.5;
+  const s = w * (0.2 + rand() * 0.05);
+  const kind = Math.floor(rand() * 5);
+  const material = OBJECT_MATERIALS[Math.floor(rand() * OBJECT_MATERIALS.length)];
+  const tilt = -7 + rand() * 14;
+  const warmGround = rand() > 0.5;
+
   return `
     <defs>
-      <radialGradient id="ground" cx="50%" cy="42%" r="72%">
-        <stop offset="0%" stop-color="${C.foam}"/>
-        <stop offset="100%" stop-color="${C.foamShade}"/>
+      <radialGradient id="ground" cx="50%" cy="40%" r="74%">
+        <stop offset="0%" stop-color="${warmGround ? C.foam : C.foamShade}"/>
+        <stop offset="100%" stop-color="${warmGround ? C.foamShade : C.graniteLight}"/>
       </radialGradient>
-      <linearGradient id="body" x1="0" y1="0" x2="0.4" y2="1">
-        <stop offset="0%" stop-color="${C.graniteLight}"/>
-        <stop offset="100%" stop-color="${C.granite}"/>
+      <linearGradient id="body" x1="0.15" y1="0" x2="0.7" y2="1">
+        <stop offset="0%" stop-color="${material[0]}"/>
+        <stop offset="100%" stop-color="${material[1]}"/>
       </linearGradient>
     </defs>
     <rect width="${w}" height="${h}" fill="url(#ground)"/>
-    <ellipse cx="${cx}" cy="${cy + r * 1.02}" rx="${r * 1.25}" ry="${r * 0.16}" fill="${C.ink}" fill-opacity="0.14"/>
+    <ellipse cx="${cx}" cy="${cy + s * 1.16}" rx="${s * 1.2}" ry="${s * 0.14}" fill="${C.ink}" fill-opacity="0.16"/>
     <g transform="rotate(${tilt.toFixed(1)} ${cx} ${cy})">
-      <rect x="${cx - r}" y="${cy - r}" width="${r * 2}" height="${r * 2}" rx="${r * 0.28}" fill="url(#body)"/>
-      <rect x="${cx - r * 0.62}" y="${cy - r * 0.55}" width="${r * 1.24}" height="${r * 0.16}" rx="${r * 0.08}" fill="${C.foam}" fill-opacity="0.35"/>
-      <circle cx="${cx + r * 0.42}" cy="${cy + r * 0.44}" r="${r * 0.17}" fill="${C.buoy}" fill-opacity="0.9"/>
+      ${objectShape(kind, cx, cy, s)}
     </g>
     ${caption(label, w, h, C.ink)}
   `;

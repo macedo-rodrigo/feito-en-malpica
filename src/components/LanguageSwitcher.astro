@@ -1,0 +1,86 @@
+---
+/**
+ * Three short links rather than a dropdown: no JavaScript, no hidden state,
+ * and one keystroke to switch. Each one points at the same page in the other
+ * language, not at the home page.
+ */
+import { LOCALE_NAMES, LOCALE_SHORT, type Locale } from '@/i18n/locales';
+import { alternates, type PageKey } from '@/i18n/routes';
+import { useTranslations } from '@/i18n/ui';
+
+interface Props {
+  locale: Locale;
+  page: PageKey;
+  slug?: string;
+}
+
+const { locale, page, slug } = Astro.props;
+const t = useTranslations(locale);
+const links = alternates(page, slug);
+---
+
+<nav class="lang" aria-label={t('nav.language')}>
+  <ul role="list">
+    {
+      links.map(({ locale: other, path }) => (
+        <li>
+          <a
+            href={path}
+            hreflang={other}
+            lang={other}
+            aria-label={LOCALE_NAMES[other]}
+            aria-current={other === locale ? 'true' : undefined}
+          >
+            {LOCALE_SHORT[other]}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .lang ul {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Hairline separators, drawn rather than typed, so they never get selected. */
+  .lang li + li::before {
+    content: '';
+    display: inline-block;
+    width: 1px;
+    height: 0.7em;
+    margin-inline-end: var(--space-2xs);
+    background-color: currentColor;
+    opacity: 0.3;
+    vertical-align: -0.05em;
+  }
+
+  .lang a {
+    font-size: var(--step--2);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    text-decoration: none;
+    opacity: 0.62;
+    transition: opacity var(--duration-fast) var(--ease);
+  }
+
+  .lang a:hover {
+    opacity: 1;
+  }
+
+  .lang a[aria-current='true'] {
+    opacity: 1;
+    color: var(--color-buoy);
+  }
+
+  :global(.on-deep) .lang a[aria-current='true'],
+  :global(.site-header[data-over-hero='true'][data-at-top='true']:not([data-open='true'])) .lang a[aria-current='true'] {
+    color: var(--color-buoy-bright);
+  }
+</style>

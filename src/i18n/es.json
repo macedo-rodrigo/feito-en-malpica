@@ -14,6 +14,7 @@
   "nav.language": "Idioma",
   "nav.languageOther": "Leer esta página en {language}",
 
+  "home.heroAlt": "Las Islas Sisargas recortadas sobre el mar, vistas desde el muelle de Malpica.",
   "home.featuredTitle": "Artesanos destacados",
   "home.featuredAll": "Ver todos los artesanos",
   "home.valueTitle": "Un escaparate, no una tienda",
@@ -62,6 +63,7 @@
   "artisan.shippingNo": "Recogida en el taller",
   "artisan.priceOnRequest": "Consultar",
   "artisan.priceLabel": "Precio",
+  "artisan.viewProfile": "Ver la ficha",
   "artisan.back": "Todos los artesanos",
   "artisan.mailSubject": "Consulta desde Feito en Malpica",
   "artisan.mailBody": "Hola, {name}:\n\nHe visto tu trabajo en Feito en Malpica y me gustaría preguntarte por...",

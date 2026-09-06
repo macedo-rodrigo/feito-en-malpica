@@ -1,0 +1,316 @@
+---
+/**
+ * Sticky header.
+ *
+ * On pages with a dark hero it starts transparent and turns solid once the
+ * page scrolls, which is handled by an IntersectionObserver on a one-pixel
+ * sentinel rather than a scroll listener. Without JavaScript the header is
+ * simply solid from the start - legible either way.
+ *
+ * The mobile menu is driven by a `data-open` attribute on the header and by
+ * CSS. Without JavaScript there is no toggle button and the links are just
+ * visible, so nothing is ever unreachable.
+ */
+import Seal from './Seal.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import type { Locale } from '@/i18n/locales';
+import { pathTo, type PageKey } from '@/i18n/routes';
+import { useTranslations } from '@/i18n/ui';
+
+interface Props {
+  locale: Locale;
+  page: PageKey;
+  slug?: string;
+  /** True when the page opens with a dark full-bleed hero. */
+  overHero?: boolean;
+}
+
+const { locale, page, slug, overHero = false } = Astro.props;
+const t = useTranslations(locale);
+
+const items: { key: PageKey; label: string }[] = [
+  { key: 'artisans', label: t('nav.artisans') },
+  { key: 'about', label: t('nav.about') },
+  { key: 'join', label: t('nav.join') },
+];
+---
+
+<header class="site-header" data-over-hero={overHero ? 'true' : undefined}>
+  <div class="container header-inner">
+    <a class="brand" href={pathTo(locale, 'home')}>
+      <Seal variant="compact" size="2.75rem" />
+      <span class="visually-hidden">Feito en Malpica — {t('nav.home')}</span>
+    </a>
+
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-menu">
+      <span class="menu-toggle__bars" aria-hidden="true"></span>
+      <span class="menu-toggle__label">{t('nav.menu')}</span>
+    </button>
+
+    <div class="header-end" id="site-menu">
+      <nav class="site-nav" aria-label={t('nav.primary')}>
+        <ul role="list">
+          {
+            items.map((item) => (
+              <li>
+                <a
+                  class="nav-link"
+                  href={pathTo(locale, item.key)}
+                  aria-current={page === item.key ? 'page' : undefined}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+      <LanguageSwitcher locale={locale} page={page} slug={slug} />
+    </div>
+  </div>
+</header>
+
+<!--
+  Sets the initial state synchronously, before the first paint, so a page
+  with a dark hero never flashes a solid header. The behaviour below is a
+  bundled module script and would run too late for this one attribute.
+-->
+<script is:inline>
+  {
+    const header = document.querySelector('.site-header');
+    if (header && header.dataset.overHero === 'true') header.dataset.atTop = 'true';
+  }
+</script>
+
+<script>
+  const header = document.querySelector<HTMLElement>('.site-header');
+  const toggle = header?.querySelector<HTMLButtonElement>('.menu-toggle');
+
+  if (header && toggle) {
+    const setOpen = (open: boolean) => {
+      header.dataset.open = String(open);
+      toggle.setAttribute('aria-expanded', String(open));
+    };
+
+    toggle.addEventListener('click', () => setOpen(header.dataset.open !== 'true'));
+
+    // Escape closes the menu and returns focus to the button that opened it.
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && header.dataset.open === 'true') {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+
+    // Following a link should not leave the panel open behind the new page.
+    header.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => setOpen(false));
+    });
+  }
+
+  // Transparent over a dark hero, solid once the page has moved.
+  if (header?.dataset.overHero === 'true') {
+    const sentinel = document.getElementById('scroll-sentinel');
+    if (sentinel && 'IntersectionObserver' in window) {
+      new IntersectionObserver(([entry]) => {
+        if (entry) header.dataset.atTop = String(entry.isIntersecting);
+      }).observe(sentinel);
+    }
+  }
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+    background-color: var(--surface-page);
+    border-block-end: var(--rule);
+    transition:
+      background-color var(--duration) var(--ease),
+      border-color var(--duration) var(--ease),
+      color var(--duration) var(--ease);
+  }
+
+  .site-header[data-over-hero='true'][data-at-top='true']:not([data-open='true']) {
+    background-color: transparent;
+    border-block-end-color: transparent;
+    color: var(--color-foam);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-m);
+    min-height: var(--header-height);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    /* Cancels the seal's clear space so the mark aligns with the container. */
+    margin-inline-start: -0.55rem;
+  }
+
+  .header-end {
+    display: flex;
+    align-items: center;
+    gap: clamp(var(--space-m), 3vw, var(--space-2xl));
+    margin-inline-start: auto;
+  }
+
+  .site-nav ul {
+    display: flex;
+    align-items: center;
+    gap: clamp(var(--space-m), 2.5vw, var(--space-l));
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-link {
+    position: relative;
+    display: inline-block;
+    padding-block: 0.45rem;
+    font-size: var(--step--1);
+    font-weight: var(--weight-medium);
+    letter-spacing: 0.015em;
+    text-decoration: none;
+  }
+
+  /* The rule draws in from the left on hover and stays put on the current page. */
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    height: 1px;
+    background-color: currentColor;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--duration) var(--ease);
+  }
+
+  .nav-link:hover::after,
+  .nav-link:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  .nav-link[aria-current='page']::after {
+    height: 2px;
+    transform: scaleX(1);
+    background-color: var(--color-buoy);
+  }
+
+  .site-header[data-over-hero='true'][data-at-top='true']:not([data-open='true'])
+    .nav-link[aria-current='page']::after {
+    background-color: var(--color-buoy-bright);
+  }
+
+  /* ------------------------------------------------------------- toggle */
+
+  .menu-toggle {
+    display: none;
+    align-items: center;
+    gap: var(--space-2xs);
+    margin-inline-start: auto;
+    padding: 0.5rem 0;
+    font-size: var(--step--2);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+
+  .menu-toggle__bars {
+    position: relative;
+    width: 1.25rem;
+    height: 2px;
+    background-color: currentColor;
+    transition: background-color var(--duration-fast) var(--ease);
+  }
+
+  .menu-toggle__bars::before,
+  .menu-toggle__bars::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    height: 2px;
+    background-color: currentColor;
+    transition: transform var(--duration) var(--ease);
+  }
+
+  .menu-toggle__bars::before {
+    top: -6px;
+  }
+  .menu-toggle__bars::after {
+    top: 6px;
+  }
+
+  .site-header[data-open='true'] .menu-toggle__bars {
+    background-color: transparent;
+  }
+
+  .site-header[data-open='true'] .menu-toggle__bars::before {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .site-header[data-open='true'] .menu-toggle__bars::after {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  /* -------------------------------------------------------------- mobile */
+
+  @media (max-width: 52em) {
+    /* The button only appears when there is JavaScript to make it work. */
+    :global(html.js) .menu-toggle {
+      display: inline-flex;
+    }
+
+    :global(html.js) .header-end {
+      display: none;
+    }
+
+    :global(html.js) .site-header[data-open='true'] .header-end {
+      display: flex;
+      position: absolute;
+      inset-inline: 0;
+      top: 100%;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-m);
+      padding: var(--space-l) var(--gutter) var(--space-xl);
+      background-color: var(--surface-page);
+      border-block-end: var(--rule);
+      box-shadow: var(--shadow-card);
+    }
+
+    .site-header[data-open='true'] .site-nav ul {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-xs);
+    }
+
+    /* Big enough to hit with a thumb, and set in the display face. */
+    .site-header[data-open='true'] .nav-link {
+      font-family: var(--font-display);
+      font-size: var(--step-2);
+      font-weight: var(--weight-display);
+      letter-spacing: var(--tracking-tight);
+    }
+
+    /* Without JavaScript the links simply sit under the seal. */
+    :global(html:not(.js)) .header-inner {
+      flex-wrap: wrap;
+      row-gap: var(--space-2xs);
+      padding-block-end: var(--space-2xs);
+    }
+
+    :global(html:not(.js)) .header-end {
+      margin-inline-start: 0;
+      flex-basis: 100%;
+      justify-content: space-between;
+      gap: var(--space-m);
+    }
+  }
+</style>

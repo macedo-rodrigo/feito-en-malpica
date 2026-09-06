@@ -1,0 +1,320 @@
+---
+/**
+ * The home page, in whichever language it is handed.
+ *
+ * Pages under src/pages/ are thin wrappers around views like this one, so the
+ * three language versions of a page can never drift apart in structure - only
+ * in the content they load.
+ */
+import { Image } from 'astro:assets';
+import { getCollection, render } from 'astro:content';
+import Base from '@/layouts/Base.astro';
+import Seal from '@/components/Seal.astro';
+import ArtisanCard from '@/components/ArtisanCard.astro';
+import ArtisanSpotlight from '@/components/ArtisanSpotlight.astro';
+import heroImage from '@/assets/hero-malpica.jpg';
+import { getArtisans } from '@/lib/artisans';
+import { pathTo } from '@/i18n/routes';
+import { useTranslations } from '@/i18n/ui';
+import type { Locale } from '@/i18n/locales';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const [page] = await getCollection('pages', ({ id }) => id === `${locale}/home`);
+if (!page) throw new Error(`Missing src/content/pages/${locale}/home.md`);
+const { Content } = await render(page);
+
+const artisans = await getArtisans(locale);
+const featured = artisans.filter((artisan) => artisan.featured);
+// Fall back to everyone rather than showing an empty section if nobody is
+// flagged as featured yet.
+const highlight = featured.length > 0 ? featured : artisans;
+---
+
+<Base
+  locale={locale}
+  page="home"
+  title={page.data.title}
+  description={page.data.description}
+  overHero
+>
+  <section class="hero on-deep">
+    <Image
+      class="hero__image"
+      src={heroImage}
+      alt={t('home.heroAlt')}
+      widths={[800, 1200, 1800, 2400]}
+      sizes="100vw"
+      loading="eager"
+      fetchpriority="high"
+      decoding="sync"
+    />
+
+    <div class="container hero__content">
+      <p class="eyebrow eyebrow--plain hero__eyebrow">{t('site.tagline')}</p>
+      <h1>{page.data.heading}</h1>
+      <p class="lead hero__lead">{page.data.lead}</p>
+      <p class="hero__actions">
+        <a class="button button--primary" href={pathTo(locale, 'artisans')}>
+          {page.data.hero?.cta}
+        </a>
+        <a class="button button--ghost" href={pathTo(locale, 'about')}>
+          {page.data.hero?.ctaSecondary}
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section values">
+    <div class="container">
+      <h2 class="eyebrow">{t('home.valueTitle')}</h2>
+      <ul class="values__list" role="list">
+        {
+          page.data.values?.map((value, i) => (
+            <li class="value">
+              <span class="value__number" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <h3 class="value__title">{value.title}</h3>
+              <p class="value__text">{value.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section featured">
+    <div class="container">
+      <h2 class="eyebrow featured__heading">{t('home.featuredTitle')}</h2>
+
+      {
+        highlight.length === 1 && highlight[0] ? (
+          <ArtisanSpotlight artisan={highlight[0]} locale={locale} />
+        ) : (
+          <ul class="cards" role="list">
+            {highlight.map((artisan, i) => (
+              <li>
+                <ArtisanCard artisan={artisan} locale={locale} index={i + 1} />
+              </li>
+            ))}
+          </ul>
+        )
+      }
+
+      <p class="featured__all">
+        <a class="button button--ghost" href={pathTo(locale, 'artisans')}>
+          {t('home.featuredAll')}
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section malpica on-deep">
+    <div class="malpica__watermark" aria-hidden="true">
+      <Seal variant="full" size="min(34rem, 78vw)" clearSpace={0.2} />
+    </div>
+    <div class="container malpica__inner">
+      <h2 class="eyebrow">{t('home.aboutTitle')}</h2>
+      <div class="prose malpica__prose">
+        <Content />
+      </div>
+      <p class="malpica__more">
+        <a class="button button--ghost" href={pathTo(locale, 'about')}>{t('home.aboutMore')}</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="join">
+    <div class="container join__inner">
+      <h2 class="join__title">{t('home.joinTitle')}</h2>
+      <a class="button button--primary" href={pathTo(locale, 'join')}>{t('home.joinCta')}</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* ------------------------------------------------------------------ hero */
+
+  .hero {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: clamp(30rem, 86svh, 46rem);
+    /* Room for the transparent header sitting over the top of it. */
+    padding-block: 9rem var(--section);
+    overflow: hidden;
+  }
+
+  .hero__image {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /*
+    Two overlays rather than one: a wash that keeps the whole frame in the
+    dark end of the palette, and a stronger foot so the text always has
+    something solid behind it however the photograph is cropped.
+  */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(to top, rgb(10 36 49 / 0.92) 0%, rgb(10 36 49 / 0.5) 42%, rgb(10 36 49 / 0.3) 100%),
+      linear-gradient(to right, rgb(10 36 49 / 0.55) 0%, rgb(10 36 49 / 0) 60%);
+  }
+
+  .hero__content {
+    position: relative;
+  }
+
+  .hero__eyebrow {
+    margin-block-end: var(--space-m);
+  }
+
+  .hero h1 {
+    max-width: 16ch;
+  }
+
+  .hero__lead {
+    max-width: 44ch;
+    margin-block-start: var(--space-m);
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-s);
+    margin-block-start: var(--space-xl);
+  }
+
+  /* ---------------------------------------------------------------- values */
+
+  .values__list {
+    display: grid;
+    gap: var(--space-xl) var(--space-2xl);
+    margin-block-start: var(--space-xl);
+    padding-inline-start: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 48em) {
+    .values__list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .value {
+    padding-block-start: var(--space-m);
+    border-block-start: 2px solid var(--color-ink);
+  }
+
+  .value__number {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--step--1);
+    letter-spacing: var(--tracking-label);
+    color: var(--color-buoy);
+  }
+
+  .value__title {
+    margin-block-start: var(--space-2xs);
+    font-size: var(--step-2);
+  }
+
+  .value__text {
+    margin-block-start: var(--space-xs);
+    font-size: var(--step--1);
+    color: var(--color-ink-soft);
+  }
+
+  /* -------------------------------------------------------------- featured */
+
+  .featured {
+    padding-block-start: 0;
+  }
+
+  .featured__heading {
+    margin-block-end: var(--space-xl);
+  }
+
+  .cards {
+    display: grid;
+    gap: var(--space-l);
+    grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+    padding-inline-start: 0;
+    list-style: none;
+  }
+
+  .featured__all {
+    margin-block-start: var(--space-xl);
+  }
+
+  /* --------------------------------------------------------------- malpica */
+
+  .malpica {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* The seal, blown up and almost invisible, as a watermark on the water. */
+  .malpica__watermark {
+    position: absolute;
+    z-index: -1;
+    inset-block-start: 50%;
+    inset-inline-end: -8%;
+    translate: 0 -50%;
+    opacity: 0.07;
+    pointer-events: none;
+  }
+
+  /* Below the two-column point it would sit straight under the text. */
+  @media (max-width: 60em) {
+    .malpica__watermark {
+      display: none;
+    }
+  }
+
+  .malpica__inner {
+    position: relative;
+  }
+
+  .malpica__prose {
+    /* Set larger than body copy, so the measure tightens to compensate. */
+    max-width: 46ch;
+    margin-block-start: var(--space-xl);
+    color: var(--text-on-deep);
+    font-size: var(--step-1);
+    line-height: var(--leading-body);
+  }
+
+  .malpica__more {
+    margin-block-start: var(--space-xl);
+  }
+
+  /* ------------------------------------------------------------------ join */
+
+  .join__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-l);
+    padding-block: var(--space-2xl);
+    border-block: 2px solid var(--color-ink);
+  }
+
+  .join__title {
+    max-width: 20ch;
+    font-size: var(--step-3);
+  }
+</style>

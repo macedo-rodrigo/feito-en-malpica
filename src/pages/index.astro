@@ -1,0 +1,86 @@
+---
+/**
+ * SCAFFOLD. Unstyled on purpose: this page exists so phase 1 can be built and
+ * checked end to end - schema validation, image resolution, i18n helpers and
+ * contact links. It is replaced by the real home page in phase 3.
+ */
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import { useTranslations } from '@/i18n/ui';
+import { pathTo } from '@/i18n/routes';
+import { formatPrice } from '@/lib/format';
+import { mailtoHref, telHref, whatsappHref, formatPhone } from '@/lib/contact';
+
+const locale = 'gl' as const;
+const t = useTranslations(locale);
+
+const artisans = (await getCollection('artisans')).sort((a, b) => a.data.order - b.data.order);
+const [home] = await getCollection('pages', ({ id }) => id === 'gl/home');
+if (!home) throw new Error('Missing src/content/pages/gl/home.md');
+const { Content } = await render(home);
+---
+
+<html lang="gl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{home.data.title}</title>
+    <meta name="description" content={home.data.description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <h1>{home.data.heading}</h1>
+    <p>{home.data.lead}</p>
+    <p><a href={pathTo(locale, 'artisans')}>{home.data.hero?.cta}</a></p>
+
+    <Content />
+
+    <h2>{t('home.featuredTitle')}</h2>
+    {
+      artisans.map((artisan) => (
+        <article>
+          <h3>
+            {artisan.data.name} — {t(`craft.${artisan.data.craft}`)}
+          </h3>
+          <Image src={artisan.data.photo.src} alt={artisan.data.photo.alt} width={320} height={400} />
+          <p>{artisan.data.summary}</p>
+          <p>
+            {artisan.data.contact.phone && (
+              <a href={telHref(artisan.data.contact.phone)}>
+                {t('artisan.phone')}: {formatPhone(artisan.data.contact.phone)}
+              </a>
+            )}
+            {artisan.data.contact.whatsapp && (
+              <a
+                href={whatsappHref(
+                  artisan.data.contact.whatsapp,
+                  t('artisan.whatsappMessage', { name: artisan.data.name }),
+                )}
+              >
+                {t('artisan.whatsapp')}
+              </a>
+            )}
+            {artisan.data.contact.email && (
+              <a
+                href={mailtoHref(artisan.data.contact.email, {
+                  subject: t('artisan.mailSubject'),
+                  body: t('artisan.mailBody', { name: artisan.data.name }),
+                })}
+              >
+                {t('artisan.email')}
+              </a>
+            )}
+          </p>
+          <ul>
+            {artisan.data.pieces.map((piece) => (
+              <li>
+                {piece.title} —{' '}
+                {piece.price === null ? t('artisan.priceOnRequest') : formatPrice(piece.price, locale)}
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))
+    }
+  </body>
+</html>

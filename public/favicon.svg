@@ -1,0 +1,19 @@
+<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor">
+  <!--
+    Reduced mark for 16-32px use (favicon, tab icon, share icons).
+
+    Deliberately NOT a trace of the seal. In the original artwork the ring is
+    9 units thick in this 512 coordinate space, which is 0.57px at 32px: it
+    disappears whatever you do to it. The lettering is likewise unresolvable
+    below about 64px. So this variant keeps only what survives - the ring and
+    the Sisargas - redrawn with weight, using proportions measured off the
+    traced seal (islands span 82% of the ring width, sit on the horizontal
+    centre, and read as one large island with a smaller one to its right).
+  -->
+  <circle cx="256" cy="256" r="236" fill="none" stroke="currentColor" stroke-width="32" />
+  <!-- Sea line -->
+  <rect x="56" y="288" width="400" height="16" rx="8" />
+  <!-- Illas Sisargas: the long low island, and its smaller neighbour -->
+  <path d="M72 300C84 260 124 232 176 232C232 232 282 262 312 300Z" />
+  <path d="M328 300C340 274 364 258 392 258C420 258 438 276 448 300Z" />
+</svg>

@@ -1,0 +1,29 @@
+{
+  "name": "feito-en-malpica",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Escaparate online dos artesáns de Malpica de Bergantiños",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "brand:trace": "node scripts/trace-logo.mjs",
+    "images:placeholders": "node scripts/generate-placeholders.mjs"
+  },
+  "engines": {
+    "node": ">=20.3.0"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource-variable/public-sans": "^5.3.0",
+    "astro": "^5.18.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "potrace": "^2.1.8",
+    "typescript": "^5.9.3"
+  }
+}

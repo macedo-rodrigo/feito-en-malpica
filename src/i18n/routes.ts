@@ -4,9 +4,9 @@ import { DEFAULT_LOCALE, LOCALES, type Locale } from './locales';
  * URLs are content, so path segments are translated too. Galician has no
  * prefix; the other locales are served under /es/ and /en/.
  *
- *   gl  /artesans/uxio-lema/
- *   es  /es/artesanos/uxio-lema/
- *   en  /en/makers/uxio-lema/
+ *   gl  /artesans/nadia3d/
+ *   es  /es/artesanos/nadia3d/
+ *   en  /en/makers/nadia3d/
  *
  * The artisan slug itself is NOT translated: it is the identity of the
  * craftsperson and stays stable across languages (and in analytics).

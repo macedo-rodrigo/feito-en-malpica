@@ -295,11 +295,25 @@ A migración é pequena: este proxecto non usa ningunha das APIs que cambiaron.
 
 ---
 
-## Datos de exemplo
+## Datos pendentes
 
-A ficha de **Uxío Lema Vilariño / Capa a Capa** é un exemplo. O teléfono, o
-WhatsApp, o correo e o Instagram son inventados e non pertencen a ninguén.
-Hai que substituílos por datos reais antes de publicar.
+A ficha de **Nadia3D** é dun obradoiro real, pero aínda está incompleta. Estas
+cousas están postas como marcador e **hai que cambialas antes de publicar**:
+
+| Campo | Que hai agora |
+| --- | --- |
+| `name` | Só "Nadia": falta o apelido |
+| `location.address` | Só "Malpica de Bergantiños": falta a rúa |
+| `contact.phone` / `whatsapp` | Números en rangos **non asignados**: non chaman a ningures |
+| `contact.email` | Un enderezo no dominio reservado `.example`: non chega a ningures |
+| `shipping` | Posto en `false` por precaución, sen confirmar |
+| `photo` | É a foto dunha peza, non un retrato do obradoiro |
+| Prezos | Os tres están como "consultar" |
+
+Os marcadores de teléfono e correo están escollidos a propósito en rangos que
+non existen: se a web se publica antes de tempo, ninguén vai chamar por erro a
+un descoñecido. A lista está tamén como comentario na cabeceira do propio
+`src/content/artisans/nadia3d/index.md`.
 
 ## Privacidade
 

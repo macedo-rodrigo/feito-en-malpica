@@ -56,7 +56,7 @@ const artisans = defineCollection({
     pattern: '*/index.md',
     base: './src/content/artisans',
     // One folder per artisan, so their photos sit next to their text.
-    // src/content/artisans/uxio-lema/index.md -> id "uxio-lema"
+    // src/content/artisans/nadia3d/index.md -> id "nadia3d"
     generateId: ({ entry }) => entry.replace(/\/index\.md$/, ''),
   }),
   schema: ({ image }) =>
@@ -119,7 +119,7 @@ const artisans = defineCollection({
  * actually changes from one language to another, and anything left out falls
  * back to Galician.
  *
- *   src/content/translations/es/uxio-lema.md  -> Spanish text for "uxio-lema"
+ *   src/content/translations/es/nadia3d.md  -> Spanish text for "nadia3d"
  */
 const artisanTranslations = defineCollection({
   loader: glob({ pattern: '{es,en}/*.md', base: './src/content/translations' }),

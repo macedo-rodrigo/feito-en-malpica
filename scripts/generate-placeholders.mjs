@@ -43,27 +43,6 @@ const C = {
  */
 const TARGETS = [
   {
-    file: 'src/content/artisans/uxio-lema/perfil.jpg',
-    style: 'portrait',
-    width: 1000,
-    height: 1250,
-    label: 'Uxío Lema · retrato',
-  },
-  ...[
-    ['lampada-sisargas', 'Lámpada Sisargas'],
-    ['chaveiro-percebe', 'Chaveiro percebe'],
-    ['recambio-aparello', 'Recambios para aparellos'],
-    ['faro-punta-nariga', 'Faro de Punta Nariga'],
-    ['gamela-malpica', 'Gamela malpicá 1:20'],
-    ['portavelas-onda', 'Portavelas Onda'],
-  ].map(([slug, label]) => ({
-    file: `src/content/artisans/uxio-lema/pezas/${slug}.jpg`,
-    style: 'object',
-    width: 1200,
-    height: 1200,
-    label,
-  })),
-  {
     file: 'src/assets/malpica/hero.jpg',
     style: 'seascape',
     width: 2400,

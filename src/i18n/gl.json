@@ -14,7 +14,7 @@
   "nav.language": "Idioma",
   "nav.languageOther": "Ler esta páxina en {language}",
 
-  "home.heroAlt": "As Illas Sisargas recortadas sobre o mar, vistas desde o peirao de Malpica.",
+  "home.heroAlt": "O porto de Malpica visto desde a auga, coas casas de cores da vila no alto do cantil e os barcos fondeados na dársena.",
   "home.featuredTitle": "Artesáns destacados",
   "home.featuredAll": "Ver todos os artesáns",
   "home.valueTitle": "Un escaparate, non unha tenda",
@@ -23,10 +23,10 @@
   "home.joinTitle": "Tes un obradoiro en Malpica?",
   "home.joinCta": "Aparece nesta web",
 
-  "malpica.portoAlt": "Barcos amarrados no porto de Malpica, coas casas da vila detrás.",
-  "malpica.portoCaption": "O porto, coa vila detrás",
-  "malpica.peiraoAlt": "Lousas de granito do peirao cunha maroma tendida e un noray.",
-  "malpica.peiraoCaption": "Granito, maroma e noray no peirao",
+  "malpica.portoAlt": "As casas da vila apiñadas sobre o cantil, coa lonxa e os barcos fondeados diante.",
+  "malpica.portoCaption": "A vila sobre o porto",
+  "malpica.peiraoAlt": "Barcos de pesca amarrados diante do peirao de granito e da lonxa de Malpica.",
+  "malpica.peiraoCaption": "Os barcos diante da lonxa",
 
   "artisans.searchLabel": "Buscar artesáns",
   "artisans.searchPlaceholder": "Nome, oficio ou peza…",
@@ -92,5 +92,7 @@
 
   "footer.about": "Feito en Malpica é un escaparate dos oficios de Malpica de Bergantiños. Non vendemos nada: poñémosche en contacto directo con quen o fai.",
   "footer.nav": "Navegación do pé de páxina",
+  "footer.photos": "Fotos de Malpica:",
+  "footer.photosCropped": "Recortadas.",
   "footer.credits": "Feito en Malpica, na Costa da Morte."
 }

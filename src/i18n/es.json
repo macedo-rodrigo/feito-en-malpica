@@ -14,7 +14,7 @@
   "nav.language": "Idioma",
   "nav.languageOther": "Leer esta página en {language}",
 
-  "home.heroAlt": "Las Islas Sisargas recortadas sobre el mar, vistas desde el muelle de Malpica.",
+  "home.heroAlt": "El puerto de Malpica visto desde el agua, con las casas de colores del pueblo en lo alto del acantilado y los barcos fondeados en la dársena.",
   "home.featuredTitle": "Artesanos destacados",
   "home.featuredAll": "Ver todos los artesanos",
   "home.valueTitle": "Un escaparate, no una tienda",
@@ -23,10 +23,10 @@
   "home.joinTitle": "¿Tienes un taller en Malpica?",
   "home.joinCta": "Aparece en esta web",
 
-  "malpica.portoAlt": "Barcos amarrados en el puerto de Malpica, con las casas del pueblo detrás.",
-  "malpica.portoCaption": "El puerto, con el pueblo detrás",
-  "malpica.peiraoAlt": "Losas de granito del muelle con una maroma tendida y un noray.",
-  "malpica.peiraoCaption": "Granito, maroma y noray en el muelle",
+  "malpica.portoAlt": "Las casas del pueblo apiñadas sobre el acantilado, con la lonja y los barcos fondeados delante.",
+  "malpica.portoCaption": "El pueblo sobre el puerto",
+  "malpica.peiraoAlt": "Barcos de pesca amarrados frente al muelle de granito y la lonja de Malpica.",
+  "malpica.peiraoCaption": "Los barcos frente a la lonja",
 
   "artisans.searchLabel": "Buscar artesanos",
   "artisans.searchPlaceholder": "Nombre, oficio o pieza…",
@@ -92,5 +92,7 @@
 
   "footer.about": "Feito en Malpica es un escaparate de los oficios de Malpica de Bergantiños. No vendemos nada: te ponemos en contacto directo con quien lo hace.",
   "footer.nav": "Navegación del pie de página",
+  "footer.photos": "Fotos de Malpica:",
+  "footer.photosCropped": "Recortadas.",
   "footer.credits": "Feito en Malpica, en la Costa da Morte."
 }

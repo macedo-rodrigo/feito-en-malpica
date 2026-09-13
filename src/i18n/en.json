@@ -14,7 +14,7 @@
   "nav.language": "Language",
   "nav.languageOther": "Read this page in {language}",
 
-  "home.heroAlt": "The Sisargas Islands silhouetted against the sea, seen from the quay at Malpica.",
+  "home.heroAlt": "Malpica harbour seen from the water, with the village's coloured houses along the clifftop and fishing boats at anchor.",
   "home.featuredTitle": "Featured makers",
   "home.featuredAll": "See all the makers",
   "home.valueTitle": "A shop window, not a shop",
@@ -23,10 +23,10 @@
   "home.joinTitle": "Do you have a workshop in Malpica?",
   "home.joinCta": "Get listed here",
 
-  "malpica.portoAlt": "Boats moored in Malpica harbour, with the village behind them.",
-  "malpica.portoCaption": "The harbour, with the village behind",
-  "malpica.peiraoAlt": "Granite slabs on the quay, with a mooring rope and a bollard.",
-  "malpica.peiraoCaption": "Granite, rope and bollard on the quay",
+  "malpica.portoAlt": "The village houses packed along the clifftop, with the fish market and moored boats below.",
+  "malpica.portoCaption": "The village above the harbour",
+  "malpica.peiraoAlt": "Fishing boats moored against the granite quay and the fish market at Malpica.",
+  "malpica.peiraoCaption": "Boats in front of the fish market",
 
   "artisans.searchLabel": "Search makers",
   "artisans.searchPlaceholder": "Name, craft or piece…",
@@ -92,5 +92,7 @@
 
   "footer.about": "Feito en Malpica is a shop window for the crafts of Malpica de Bergantiños. We sell nothing: we put you in touch with the person who makes it.",
   "footer.nav": "Footer navigation",
+  "footer.photos": "Photographs of Malpica:",
+  "footer.photosCropped": "Cropped.",
   "footer.credits": "Feito en Malpica, on the Costa da Morte."
 }

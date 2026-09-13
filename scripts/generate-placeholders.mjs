@@ -64,7 +64,7 @@ const TARGETS = [
     label,
   })),
   {
-    file: 'src/assets/hero-malpica.jpg',
+    file: 'src/assets/malpica/hero.jpg',
     style: 'seascape',
     width: 2400,
     height: 1200,

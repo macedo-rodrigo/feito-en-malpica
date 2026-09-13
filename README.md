@@ -229,7 +229,7 @@ xeradas polo propio proxecto: **hai que substituílas por fotografías reais**.
 
 | Ficheiro | Onde sae | Proporción | Tamaño |
 | --- | --- | --- | --- |
-| `src/assets/hero-malpica.jpg` | Fondo da cabeceira | 2:1 | 2400 × 1200 px |
+| `src/assets/malpica/hero.jpg` | Fondo da cabeceira | 2:1 | 2400 × 1200 px |
 | `src/assets/malpica/porto.jpg` | Columna dereita do bloque "Malpica" | 4:5 | 1200 × 1500 px |
 | `src/assets/malpica/peirao.jpg` | Faixa ancha baixo ese bloque | 21:9 | 2000 × 860 px |
 

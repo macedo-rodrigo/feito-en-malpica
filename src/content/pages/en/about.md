@@ -22,8 +22,7 @@ deal — gets sorted out by talking, the way it always was.
 
 ## Who can be listed
 
-Anyone who works with their hands and has a workshop in Malpica de
-Bergantiños or its parishes: Barizo, Cerqueda, Cambre, Leiloio, Mens, Buño,
+Anyone whose workshop is in Malpica de Bergantiños or its parishes: Barizo, Cerqueda, Cambre, Leiloio, Mens, Buño,
 Seaia and Vilanova. It makes no difference whether you have been at it thirty
 years or two, or whether it is your main job or the thing you do after it.
 

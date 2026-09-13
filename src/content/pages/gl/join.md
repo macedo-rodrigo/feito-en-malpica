@@ -5,8 +5,8 @@ description: >-
   Bergantiños. É de balde e faise nun correo.
 heading: Aparece nesta web
 lead: >-
-  Se traballas coas mans e tes o obradoiro en Malpica ou arredores, escríbenos.
-  Non custa nada e non hai que asinar nada.
+  Se tes un obradoiro en Malpica ou arredores, escríbenos. Non custa nada
+  e non hai que asinar nada.
 ---
 
 ## O que precisamos de ti

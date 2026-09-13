@@ -222,6 +222,33 @@ cámbiao en todo o sitio.
 
 ---
 
+## Fotos de Malpica
+
+A portada leva tres imaxes do lugar. Agora mesmo son ilustracións de recheo
+xeradas polo propio proxecto: **hai que substituílas por fotografías reais**.
+
+| Ficheiro | Onde sae | Proporción | Tamaño |
+| --- | --- | --- | --- |
+| `src/assets/hero-malpica.jpg` | Fondo da cabeceira | 2:1 | 2400 × 1200 px |
+| `src/assets/malpica/porto.jpg` | Columna dereita do bloque "Malpica" | 4:5 | 1200 × 1500 px |
+| `src/assets/malpica/peirao.jpg` | Faixa ancha baixo ese bloque | 21:9 | 2000 × 860 px |
+
+Abonda con poñer a foto real co mesmo nome e a mesma proporción: non hai que
+tocar código. O sitio encárgase de convertelas a WebP e AVIF nos tamaños que
+fagan falla e de cargalas cando toque.
+
+Os textos alternativos e os pés de foto están en `src/i18n/gl.json`,
+`es.json` e `en.json`, nas claves `home.heroAlt` e `malpica.*`. Hai que
+cambialos para que describan a foto nova: o texto alternativo é o que le quen
+non ve a imaxe.
+
+**Dereitos de imaxe:** usa fotos túas ou de quen che dea permiso por escrito.
+Se collas algunha de internet, comproba a licenza antes; en Wikimedia Commons
+hai imaxes de Malpica con licenzas libres, pero case todas obrigan a citar o
+autor dunha maneira concreta.
+
+---
+
 ## Publicar
 
 Calquera servizo de sitios estáticos vale. A configuración é sempre a mesma:

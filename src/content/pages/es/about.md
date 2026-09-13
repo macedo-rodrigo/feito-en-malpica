@@ -21,8 +21,8 @@ hablando, como siempre se hizo.
 
 ## Quién puede aparecer
 
-Cualquier persona que trabaje con las manos y tenga el taller en Malpica de
-Bergantiños o en sus parroquias: Barizo, Cerqueda, Cambre, Leiloio, Mens,
+Cualquier persona que tenga su taller en Malpica de Bergantiños o en sus
+parroquias: Barizo, Cerqueda, Cambre, Leiloio, Mens,
 Buño, Seaia y Vilanova. No importa si llevas treinta años o dos, ni si es tu
 trabajo principal o lo que haces al salir del otro.
 

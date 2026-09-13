@@ -1,9 +1,9 @@
 ---
 title: Feito en Malpica — crafts of the Costa da Morte
 description: >-
-  A shop window for the makers of Malpica de Bergantiños. Meet the people who
-  work with their hands in the village and contact them directly.
-heading: What is made here is made by hand
+  A shop window for the makers of Malpica de Bergantiños. Meet the person
+  behind each piece and talk to whoever made it.
+heading: What is made here is made by someone from here
 lead: >-
   A shop window for the crafts of Malpica de Bergantiños. You look, you
   choose, and you talk straight to the person who made it.

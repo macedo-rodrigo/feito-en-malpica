@@ -112,7 +112,7 @@
     Fixed, because pages with a dark hero pull their content up by exactly
     this much so the header can sit over the photograph.
   */
-  --header-height: 4.75rem;
+  --header-height: 5.5rem;
 
   /*
     Corners stay nearly square. This is a printed-catalogue look, not an app:

@@ -5,8 +5,8 @@ description: >-
   Bergantiños. Es gratis y se hace en un correo.
 heading: Aparece en esta web
 lead: >-
-  Si trabajas con las manos y tienes el taller en Malpica o alrededores,
-  escríbenos. No cuesta nada y no hay que firmar nada.
+  Si tienes un taller en Malpica o alrededores, escríbenos. No cuesta nada
+  y no hay que firmar nada.
 ---
 
 ## Lo que necesitamos de ti

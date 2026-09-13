@@ -20,8 +20,13 @@
   "home.valueTitle": "Un escaparate, no una tienda",
   "home.aboutTitle": "Malpica de Bergantiños",
   "home.aboutMore": "Más sobre el proyecto",
-  "home.joinTitle": "¿Trabajas con las manos en Malpica?",
+  "home.joinTitle": "¿Tienes un taller en Malpica?",
   "home.joinCta": "Aparece en esta web",
+
+  "malpica.portoAlt": "Barcos amarrados en el puerto de Malpica, con las casas del pueblo detrás.",
+  "malpica.portoCaption": "El puerto, con el pueblo detrás",
+  "malpica.peiraoAlt": "Losas de granito del muelle con una maroma tendida y un noray.",
+  "malpica.peiraoCaption": "Granito, maroma y noray en el muelle",
 
   "artisans.searchLabel": "Buscar artesanos",
   "artisans.searchPlaceholder": "Nombre, oficio o pieza…",

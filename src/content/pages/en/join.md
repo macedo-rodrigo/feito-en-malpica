@@ -5,8 +5,8 @@ description: >-
   Bergantiños. It is free and it takes one email.
 heading: Get listed here
 lead: >-
-  If you work with your hands and your workshop is in Malpica or nearby,
-  write to us. It costs nothing and there is nothing to sign.
+  If your workshop is in Malpica or nearby, write to us. It costs nothing
+  and there is nothing to sign.
 ---
 
 ## What we need from you

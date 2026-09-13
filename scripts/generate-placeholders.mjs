@@ -71,6 +71,20 @@ const TARGETS = [
     label: 'Illas Sisargas desde o peirao',
   },
   {
+    file: 'src/assets/malpica/porto.jpg',
+    style: 'harbour',
+    width: 1200,
+    height: 1500,
+    label: 'Porto de Malpica',
+  },
+  {
+    file: 'src/assets/malpica/peirao.jpg',
+    style: 'quay',
+    width: 2000,
+    height: 860,
+    label: 'Peirao de Malpica',
+  },
+  {
     file: 'public/og/default.jpg',
     style: 'social',
     width: 1200,
@@ -258,7 +272,97 @@ function social(w, h, label, rand) {
   `;
 }
 
-const STYLES = { seascape, object, portrait, social };
+
+/**
+ * The working harbour: the village stacked behind the quay, boats on the
+ * water, the headland closing the bay. Stands in for a real photograph of
+ * Malpica until one exists.
+ */
+function harbour(w, h, label, rand) {
+  const horizon = Math.round(h * (0.4 + rand() * 0.06));
+  const quay = Math.round(h * 0.84);
+
+  const houses = Array.from({ length: 9 }, (_, i) => {
+    const bw = w * (0.05 + rand() * 0.05);
+    const bh = h * (0.05 + rand() * 0.07);
+    const x = w * 0.02 + i * (w * 0.1);
+    const roof = horizon - bh;
+    const tone = i % 3 === 0 ? C.foamShade : i % 3 === 1 ? C.graniteLight : C.foam;
+    return `<rect x="${x.toFixed(1)}" y="${roof.toFixed(1)}" width="${bw.toFixed(1)}" height="${(bh + h * 0.02).toFixed(1)}" fill="${tone}" fill-opacity="0.85"/>`;
+  }).join('');
+
+  const boats = Array.from({ length: 3 }, (_, i) => {
+    const bx = w * (0.18 + i * 0.28 + rand() * 0.05);
+    const by = horizon + h * (0.1 + i * 0.11);
+    const bw = w * (0.1 + rand() * 0.05);
+    const hull = `<path d="M${bx - bw} ${by} L${bx + bw} ${by} C${bx + bw * 0.7} ${by + h * 0.045} ${bx - bw * 0.7} ${by + h * 0.045} ${bx - bw} ${by}Z" fill="${C.foam}" fill-opacity="0.9"/>`;
+    const mast = `<rect x="${bx - w * 0.002}" y="${by - h * 0.09}" width="${w * 0.004}" height="${h * 0.09}" fill="${C.ink}" fill-opacity="0.55"/>`;
+    const stripe = `<rect x="${bx - bw}" y="${by - h * 0.012}" width="${bw * 2}" height="${h * 0.012}" fill="${i === 1 ? C.buoy : C.sea}" fill-opacity="0.8"/>`;
+    return mast + hull + stripe;
+  }).join('');
+
+  return `
+    <defs>
+      <linearGradient id="hsky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${C.sea}"/>
+        <stop offset="70%" stop-color="${C.seaMist}"/>
+        <stop offset="100%" stop-color="${C.foamShade}"/>
+      </linearGradient>
+      <linearGradient id="hwater" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${C.sea}"/>
+        <stop offset="100%" stop-color="${C.seaDeep}"/>
+      </linearGradient>
+    </defs>
+    <rect width="${w}" height="${horizon}" fill="url(#hsky)"/>
+    <path d="${hump(w * 0.55, w * 1.05, horizon, h * 0.1, 0.55)}" fill="${C.granite}" fill-opacity="0.55"/>
+    ${houses}
+    <rect y="${horizon}" width="${w}" height="${h - horizon}" fill="url(#hwater)"/>
+    ${boats}
+    <rect y="${quay}" width="${w}" height="${h - quay}" fill="${C.granite}"/>
+    <rect y="${quay}" width="${w}" height="${h * 0.008}" fill="${C.ink}" fill-opacity="0.3"/>
+    <circle cx="${w * 0.87}" cy="${quay - h * 0.04}" r="${w * 0.012}" fill="${C.buoy}"/>
+  `;
+}
+
+/**
+ * The quay itself, close up: granite blocks, mooring rope and a bollard.
+ */
+function quay(w, h, label, rand) {
+  const rows = 5;
+  const blockH = h / rows;
+  const stones = Array.from({ length: rows }, (_, r) => {
+    const offset = (r % 2) * 0.5;
+    const perRow = 6;
+    return Array.from({ length: perRow + 1 }, (_, c) => {
+      const bw = w / perRow;
+      const x = (c - 1 + offset) * bw;
+      const shade = 0.06 + rand() * 0.16;
+      return `<rect x="${x.toFixed(1)}" y="${(r * blockH).toFixed(1)}" width="${(bw - 3).toFixed(1)}" height="${(blockH - 3).toFixed(1)}" fill="${C.ink}" fill-opacity="${shade.toFixed(3)}"/>`;
+    }).join('');
+  }).join('');
+
+  const ropeY = h * 0.62;
+  return `
+    <defs>
+      <linearGradient id="stone" x1="0" y1="0" x2="0.6" y2="1">
+        <stop offset="0%" stop-color="${C.graniteLight}"/>
+        <stop offset="100%" stop-color="${C.granite}"/>
+      </linearGradient>
+    </defs>
+    <rect width="${w}" height="${h}" fill="url(#stone)"/>
+    ${stones}
+    <path d="M0 ${ropeY} C${w * 0.25} ${ropeY + h * 0.16} ${w * 0.5} ${ropeY - h * 0.12} ${w} ${ropeY + h * 0.06}"
+      fill="none" stroke="${C.foamShade}" stroke-width="${h * 0.022}" stroke-linecap="round" opacity="0.9"/>
+    <path d="M0 ${ropeY} C${w * 0.25} ${ropeY + h * 0.16} ${w * 0.5} ${ropeY - h * 0.12} ${w} ${ropeY + h * 0.06}"
+      fill="none" stroke="${C.ink}" stroke-width="${h * 0.006}" stroke-linecap="round" opacity="0.2"
+      stroke-dasharray="${h * 0.02} ${h * 0.03}"/>
+    <rect x="${w * 0.1}" y="${h * 0.3}" width="${w * 0.06}" height="${h * 0.5}" rx="${w * 0.02}" fill="${C.ink}" fill-opacity="0.72"/>
+    <rect x="${w * 0.085}" y="${h * 0.27}" width="${w * 0.09}" height="${h * 0.06}" rx="${w * 0.02}" fill="${C.ink}" fill-opacity="0.72"/>
+    <circle cx="${w * 0.78}" cy="${h * 0.33}" r="${h * 0.05}" fill="${C.buoy}" fill-opacity="0.92"/>
+  `;
+}
+
+const STYLES = { seascape, object, portrait, social, harbour, quay };
 
 /** Fine film grain, so flat vector fills do not read as a screenshot of CSS. */
 function grain(size, rand) {

@@ -1,9 +1,9 @@
 ---
 title: Feito en Malpica — oficios da Costa da Morte
 description: >-
-  Escaparate dos artesáns de Malpica de Bergantiños. Coñece quen traballa
-  coas mans na vila e fala directamente con eles: aquí non se vende nada.
-heading: O que se fai aquí, faise a man
+  Escaparate dos artesáns de Malpica de Bergantiños. Coñece a quen está
+  detrás de cada peza e fala directamente con quen a fai.
+heading: O que se fai aquí, faino alguén de aquí
 lead: >-
   Un escaparate dos oficios de Malpica de Bergantiños. Miras, escolles e
   falas directamente con quen o fai.

@@ -20,8 +20,13 @@
   "home.valueTitle": "A shop window, not a shop",
   "home.aboutTitle": "Malpica de Bergantiños",
   "home.aboutMore": "More about the project",
-  "home.joinTitle": "Do you work with your hands in Malpica?",
+  "home.joinTitle": "Do you have a workshop in Malpica?",
   "home.joinCta": "Get listed here",
+
+  "malpica.portoAlt": "Boats moored in Malpica harbour, with the village behind them.",
+  "malpica.portoCaption": "The harbour, with the village behind",
+  "malpica.peiraoAlt": "Granite slabs on the quay, with a mooring rope and a bollard.",
+  "malpica.peiraoCaption": "Granite, rope and bollard on the quay",
 
   "artisans.searchLabel": "Search makers",
   "artisans.searchPlaceholder": "Name, craft or piece…",

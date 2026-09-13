@@ -9,10 +9,11 @@
 import { Image } from 'astro:assets';
 import { getCollection, render } from 'astro:content';
 import Base from '@/layouts/Base.astro';
-import Seal from '@/components/Seal.astro';
 import ArtisanCard from '@/components/ArtisanCard.astro';
 import ArtisanSpotlight from '@/components/ArtisanSpotlight.astro';
 import heroImage from '@/assets/hero-malpica.jpg';
+import portoImage from '@/assets/malpica/porto.jpg';
+import peiraoImage from '@/assets/malpica/peirao.jpg';
 import { getArtisans } from '@/lib/artisans';
 import { pathTo } from '@/i18n/routes';
 import { useTranslations } from '@/i18n/ui';
@@ -114,17 +115,43 @@ const highlight = featured.length > 0 ? featured : artisans;
   </section>
 
   <section class="section malpica on-deep">
-    <div class="malpica__watermark" aria-hidden="true">
-      <Seal variant="full" size="min(34rem, 78vw)" clearSpace={0.2} />
-    </div>
-    <div class="container malpica__inner">
+    <div class="container">
       <h2 class="eyebrow">{t('home.aboutTitle')}</h2>
-      <div class="prose malpica__prose">
-        <Content />
+
+      <div class="malpica__grid">
+        <div>
+          <div class="prose malpica__prose">
+            <Content />
+          </div>
+          <p class="malpica__more">
+            <a class="button button--ghost" href={pathTo(locale, 'about')}>{t('home.aboutMore')}</a>
+          </p>
+        </div>
+
+        <figure class="malpica__figure">
+          <Image
+            src={portoImage}
+            alt={t('malpica.portoAlt')}
+            widths={[400, 600, 900, 1200]}
+            sizes="(min-width: 60em) 26rem, 92vw"
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>{t('malpica.portoCaption')}</figcaption>
+        </figure>
       </div>
-      <p class="malpica__more">
-        <a class="button button--ghost" href={pathTo(locale, 'about')}>{t('home.aboutMore')}</a>
-      </p>
+
+      <figure class="malpica__figure malpica__figure--wide">
+        <Image
+          src={peiraoImage}
+          alt={t('malpica.peiraoAlt')}
+          widths={[800, 1200, 1600, 2000]}
+          sizes="(min-width: 76rem) 76rem, 100vw"
+          loading="lazy"
+          decoding="async"
+        />
+        <figcaption>{t('malpica.peiraoCaption')}</figcaption>
+      </figure>
     </div>
   </section>
 
@@ -261,36 +288,47 @@ const highlight = featured.length > 0 ? featured : artisans;
 
   /* --------------------------------------------------------------- malpica */
 
-  .malpica {
-    position: relative;
-    overflow: hidden;
+  .malpica__grid {
+    display: grid;
+    gap: var(--space-2xl);
+    align-items: start;
+    margin-block-start: var(--space-xl);
   }
 
-  /* The seal, blown up and almost invisible, as a watermark on the water. */
-  .malpica__watermark {
-    position: absolute;
-    z-index: -1;
-    inset-block-start: 50%;
-    inset-inline-end: -8%;
-    translate: 0 -50%;
-    opacity: 0.07;
-    pointer-events: none;
-  }
-
-  /* Below the two-column point it would sit straight under the text. */
-  @media (max-width: 60em) {
-    .malpica__watermark {
-      display: none;
+  @media (min-width: 60em) {
+    .malpica__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+      gap: var(--space-3xl);
     }
   }
 
-  .malpica__inner {
-    position: relative;
+  .malpica__figure img {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border-radius: var(--radius);
+  }
+
+  .malpica__figure figcaption {
+    margin-block-start: var(--space-xs);
+    font-size: var(--step--2);
+    letter-spacing: 0.02em;
+    color: var(--text-on-deep-muted);
+  }
+
+  /* The wide plate runs the full container, under both columns. */
+  .malpica__figure--wide {
+    margin-block-start: var(--space-2xl);
+  }
+
+  .malpica__figure--wide img {
+    aspect-ratio: 21 / 9;
   }
 
   .malpica__prose {
     /* Set larger than body copy, so the measure tightens to compensate. */
     max-width: 46ch;
+    margin-block-start: 0;
     margin-block-start: var(--space-xl);
     color: var(--text-on-deep);
     font-size: var(--step-1);

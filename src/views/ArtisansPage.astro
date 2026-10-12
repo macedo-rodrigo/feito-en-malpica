@@ -1,0 +1,352 @@
+---
+/**
+ * The directory: every artisan, with a craft filter and a search box.
+ *
+ * Every card is rendered server-side and the filtering happens by hiding
+ * them, so the page works with JavaScript switched off - you simply get the
+ * full list, and the controls stay hidden rather than sitting there dead.
+ *
+ * The current filter and query are mirrored into the URL, so a filtered view
+ * can be linked, bookmarked and shared.
+ */
+import { getCollection } from 'astro:content';
+import Base from '@/layouts/Base.astro';
+import ArtisanCard from '@/components/ArtisanCard.astro';
+import { getArtisans } from '@/lib/artisans';
+import { useTranslations } from '@/i18n/ui';
+import type { Locale } from '@/i18n/locales';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const [page] = await getCollection('pages', ({ id }) => id === `${locale}/artisans`);
+if (!page) throw new Error(`Missing src/content/pages/${locale}/artisans.md`);
+
+const artisans = await getArtisans(locale);
+
+/** Only the crafts that actually have someone in them get a filter button. */
+const crafts = [...new Set(artisans.map((artisan) => artisan.craft))].sort((a, b) =>
+  t(`craft.${a}`).localeCompare(t(`craft.${b}`), locale),
+);
+
+/**
+ * Everything the search box looks at, flattened and lowercased at build time
+ * so the browser only has to do a substring test.
+ */
+function haystack(artisan: (typeof artisans)[number]): string {
+  return [
+    artisan.name,
+    artisan.workshop,
+    t(`craft.${artisan.craft}`),
+    artisan.summary,
+    ...artisan.pieces.map((piece) => piece.title),
+  ]
+    .join(' ')
+    .toLowerCase()
+    // Fold accents, so "ceramica" finds "cerámica".
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+---
+
+<Base
+  locale={locale}
+  page="artisans"
+  title={page.data.title}
+  description={page.data.description}
+>
+  <div class="container">
+    <header class="page-head">
+      <h1>{page.data.heading}</h1>
+      {page.data.lead && <p class="lead">{page.data.lead}</p>}
+    </header>
+
+    <div class="controls" data-controls hidden>
+      <div class="filters">
+        <h2 class="eyebrow eyebrow--plain filters__label" id="filter-label">
+          {t('artisans.filterLabel')}
+        </h2>
+        <div class="filters__buttons" role="group" aria-labelledby="filter-label">
+          <button type="button" class="chip" data-craft="all" aria-pressed="true">
+            {t('artisans.filterAll')}
+          </button>
+          {
+            crafts.map((craft) => (
+              <button type="button" class="chip" data-craft={craft} aria-pressed="false">
+                {t(`craft.${craft}`)}
+              </button>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="search">
+        <label class="eyebrow eyebrow--plain search__label" for="artisan-search">
+          {t('artisans.searchLabel')}
+        </label>
+        <div class="search__field">
+          <input
+            type="search"
+            id="artisan-search"
+            data-search
+            placeholder={t('artisans.searchPlaceholder')}
+            autocomplete="off"
+          />
+        </div>
+      </div>
+    </div>
+
+    <p
+      class="results"
+      data-results
+      data-one={t('artisans.resultsOne')}
+      data-many={t('artisans.resultsMany', { count: '{count}' })}
+      role="status"
+      aria-live="polite"
+    >
+      {artisans.length === 1 ? t('artisans.resultsOne') : t('artisans.resultsMany', { count: artisans.length })}
+    </p>
+
+    <ul class="cards" role="list" data-list>
+      {
+        artisans.map((artisan, i) => (
+          <li data-craft={artisan.craft} data-haystack={haystack(artisan)}>
+            <ArtisanCard artisan={artisan} locale={locale} index={i + 1} priority={i < 3} />
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="empty" data-empty hidden>
+      {t('artisans.empty')}{' '}
+      <button type="button" class="link-button" data-reset>{t('artisans.emptyAction')}</button>
+    </p>
+  </div>
+</Base>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-list]');
+  const controls = document.querySelector<HTMLElement>('[data-controls]');
+
+  if (root && controls) {
+    const chips = [...document.querySelectorAll<HTMLButtonElement>('[data-craft][aria-pressed]')];
+    const search = document.querySelector<HTMLInputElement>('[data-search]');
+    const results = document.querySelector<HTMLElement>('[data-results]');
+    const empty = document.querySelector<HTMLElement>('[data-empty]');
+    const reset = document.querySelector<HTMLButtonElement>('[data-reset]');
+    const items = [...root.querySelectorAll<HTMLLIElement>('li')];
+
+    // Same folding the build applied to the searchable text.
+    const fold = (value: string) =>
+      value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+    const one = results?.dataset.one ?? '';
+    const many = results?.dataset.many ?? '';
+
+    let craft = 'all';
+    let query = '';
+
+    function apply({ pushUrl = true } = {}) {
+      const needle = fold(query);
+      let shown = 0;
+
+      for (const item of items) {
+        const matchesCraft = craft === 'all' || item.dataset.craft === craft;
+        const matchesQuery = needle === '' || (item.dataset.haystack ?? '').includes(needle);
+        const visible = matchesCraft && matchesQuery;
+        item.hidden = !visible;
+        if (visible) shown += 1;
+      }
+
+      for (const chip of chips) {
+        chip.setAttribute('aria-pressed', String(chip.dataset.craft === craft));
+      }
+
+      if (results) {
+        results.textContent = shown === 1 ? one : many.replace('{count}', String(shown));
+      }
+      if (empty) empty.hidden = shown > 0;
+
+      if (pushUrl) {
+        const url = new URL(window.location.href);
+        if (craft === 'all') url.searchParams.delete('oficio');
+        else url.searchParams.set('oficio', craft);
+        if (query === '') url.searchParams.delete('q');
+        else url.searchParams.set('q', query);
+        window.history.replaceState({}, '', url);
+      }
+    }
+
+    for (const chip of chips) {
+      chip.addEventListener('click', () => {
+        craft = chip.dataset.craft ?? 'all';
+        apply();
+      });
+    }
+
+    search?.addEventListener('input', () => {
+      query = search.value;
+      apply();
+    });
+
+    reset?.addEventListener('click', () => {
+      craft = 'all';
+      query = '';
+      if (search) search.value = '';
+      apply();
+      search?.focus();
+    });
+
+    // A shared link arrives with the filter already in it.
+    const initial = new URL(window.location.href).searchParams;
+    const initialCraft = initial.get('oficio');
+    const initialQuery = initial.get('q');
+    if (initialCraft && chips.some((chip) => chip.dataset.craft === initialCraft)) {
+      craft = initialCraft;
+    }
+    if (initialQuery) {
+      query = initialQuery;
+      if (search) search.value = initialQuery;
+    }
+    if (craft !== 'all' || query !== '') apply({ pushUrl: false });
+
+    controls.hidden = false;
+  }
+</script>
+
+<style>
+  .page-head {
+    padding-block: var(--section) var(--space-xl);
+    border-block-end: var(--rule);
+  }
+
+  .page-head .lead {
+    margin-block-start: var(--space-m);
+    max-width: 44ch;
+  }
+
+  /*
+    Hidden until the script takes over: controls that do nothing are worse
+    than no controls at all.
+  */
+  .controls[hidden] {
+    display: none;
+  }
+
+  .controls {
+    display: grid;
+    gap: var(--space-l);
+    padding-block: var(--space-xl);
+  }
+
+  @media (min-width: 52em) {
+    .controls {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+      align-items: start;
+      gap: var(--space-2xl);
+    }
+  }
+
+  .filters__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+    margin-block-start: var(--space-s);
+  }
+
+  .chip {
+    padding: 0.55em 1.1em;
+    border: 1px solid var(--color-shell);
+    border-radius: var(--radius);
+    background-color: var(--surface-raised);
+    font-size: var(--step--1);
+    font-weight: var(--weight-medium);
+    line-height: 1;
+    transition:
+      background-color var(--duration-fast) var(--ease),
+      border-color var(--duration-fast) var(--ease),
+      color var(--duration-fast) var(--ease);
+  }
+
+  .chip:hover {
+    border-color: var(--color-ink);
+  }
+
+  .chip[aria-pressed='true'] {
+    background-color: var(--color-ink);
+    border-color: var(--color-ink);
+    color: var(--color-foam);
+  }
+
+  .search__label {
+    display: block;
+  }
+
+  .search__field {
+    margin-block-start: var(--space-s);
+  }
+
+  .search input {
+    width: 100%;
+    padding: 0.6em 0.9em;
+    border: 1px solid var(--color-shell);
+    border-radius: var(--radius);
+    background-color: var(--surface-raised);
+    font-size: var(--step--1);
+    color: var(--text-body);
+    transition: border-color var(--duration-fast) var(--ease);
+  }
+
+  .search input:hover,
+  .search input:focus {
+    border-color: var(--color-ink);
+  }
+
+  .results {
+    margin-block-end: var(--space-l);
+    font-size: var(--step--2);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .cards {
+    display: grid;
+    gap: var(--space-l);
+    grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+    padding-inline-start: 0;
+    margin-block-end: var(--section);
+    list-style: none;
+  }
+
+  .cards li[hidden] {
+    display: none;
+  }
+
+  .empty {
+    margin-block: var(--space-2xl) var(--section);
+    font-size: var(--step-1);
+    color: var(--text-muted);
+  }
+
+  .empty[hidden] {
+    display: none;
+  }
+
+  .link-button {
+    padding: 0;
+    font: inherit;
+    color: var(--color-buoy);
+    text-decoration-line: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  .link-button:hover {
+    color: var(--color-buoy-deep);
+  }
+</style>

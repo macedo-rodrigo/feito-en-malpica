@@ -1,0 +1,442 @@
+---
+/**
+ * One artisan: who they are, what they make, and every way to reach them.
+ *
+ * The contact block is the point of the whole site, so it sits beside the
+ * portrait on wide screens and stays within reach while the gallery scrolls.
+ */
+import { Image } from 'astro:assets';
+import { render } from 'astro:content';
+import Base from '@/layouts/Base.astro';
+import type { LocalizedArtisan } from '@/lib/artisans';
+import type { Locale } from '@/i18n/locales';
+import { pathTo } from '@/i18n/routes';
+import { useTranslations } from '@/i18n/ui';
+import { formatPrice } from '@/lib/format';
+import { formatPhone, mailtoHref, telHref, whatsappHref } from '@/lib/contact';
+
+interface Props {
+  artisan: LocalizedArtisan;
+  locale: Locale;
+}
+
+const { artisan, locale } = Astro.props;
+const t = useTranslations(locale);
+const { Content } = await render(artisan.body);
+
+const craftLabel = t(`craft.${artisan.craft}`);
+
+const contactLinks = [
+  artisan.contact.phone && {
+    key: 'phone',
+    href: telHref(artisan.contact.phone),
+    label: t('artisan.phone'),
+    value: formatPhone(artisan.contact.phone),
+  },
+  artisan.contact.whatsapp && {
+    key: 'whatsapp',
+    href: whatsappHref(
+      artisan.contact.whatsapp,
+      t('artisan.whatsappMessage', { name: artisan.name }),
+    ),
+    label: t('artisan.whatsapp'),
+    value: formatPhone(artisan.contact.whatsapp),
+  },
+  artisan.contact.email && {
+    key: 'email',
+    href: mailtoHref(artisan.contact.email, {
+      subject: t('artisan.mailSubject'),
+      body: t('artisan.mailBody', { name: artisan.name }),
+    }),
+    label: t('artisan.email'),
+    value: artisan.contact.email,
+  },
+  artisan.contact.website && {
+    key: 'website',
+    href: artisan.contact.website,
+    label: t('artisan.website'),
+    value: artisan.contact.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''),
+  },
+].filter(Boolean) as { key: string; href: string; label: string; value: string }[];
+
+/**
+ * Structured data, so a search engine understands this is a local business
+ * with a phone number rather than a blog post.
+ */
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: artisan.workshop,
+  description: artisan.summary,
+  address: { '@type': 'PostalAddress', streetAddress: artisan.location.address },
+  ...(artisan.contact.phone ? { telephone: artisan.contact.phone } : {}),
+  ...(artisan.contact.email ? { email: artisan.contact.email } : {}),
+  ...(artisan.contact.website ? { url: artisan.contact.website } : {}),
+  ...(artisan.social.length > 0 ? { sameAs: artisan.social.map((s) => s.url) } : {}),
+};
+---
+
+<Base
+  locale={locale}
+  page="artisans"
+  slug={artisan.slug}
+  title={`${artisan.name} · ${artisan.workshop} — Feito en Malpica`}
+  description={artisan.summary}
+  type="profile"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+
+  <div class="container">
+    <p class="back">
+      <a href={pathTo(locale, 'artisans')}>&larr; {t('artisan.back')}</a>
+    </p>
+
+    <header class="profile">
+      <div class="profile__media">
+        <Image
+          src={artisan.photo.src}
+          alt={artisan.photo.alt}
+          widths={[400, 600, 800, 1000]}
+          sizes="(min-width: 64em) 28rem, 92vw"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </div>
+
+      <div class="profile__body">
+        <p class="profile__craft">{craftLabel}</p>
+        <h1>{artisan.name}</h1>
+        <p class="profile__workshop">{artisan.workshop}</p>
+        <p class="profile__summary">{artisan.summary}</p>
+
+        <div class="prose profile__prose">
+          <Content />
+        </div>
+      </div>
+    </header>
+
+    <section class="contact on-deep" aria-labelledby="contact-heading">
+      <div class="contact__inner">
+        <div class="contact__intro">
+          <h2 class="eyebrow eyebrow--plain" id="contact-heading">{t('artisan.contact')}</h2>
+          <p class="contact__lead">{t('artisan.contactIntro', { name: artisan.name })}</p>
+        </div>
+
+        <div class="contact__detail">
+          <ul class="contact__links" role="list">
+            {
+              contactLinks.map((link) => (
+                <li>
+                  <a href={link.href} class="contact__link">
+                    <span class="contact__label">{link.label}</span>
+                    <span class="contact__value">{link.value}</span>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+
+          {
+            artisan.social.length > 0 && (
+              <p class="contact__social">
+                <span class="contact__label">{t('artisan.social')}</span>
+                {artisan.social.map((network) => (
+                  <a href={network.url} rel="noopener">{network.handle ?? network.network}</a>
+                ))}
+              </p>
+            )
+          }
+
+          <dl class="contact__facts">
+            <div>
+              <dt>{t('artisan.location')}</dt>
+              <dd>
+                {artisan.location.address}
+                {artisan.location.directions && <span class="contact__directions">{artisan.location.directions}</span>}
+                {
+                  artisan.location.mapUrl && (
+                    <a href={artisan.location.mapUrl} rel="noopener">{t('artisan.map')}</a>
+                  )
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>{t('artisan.terms')}</dt>
+              <dd>
+                <span>{artisan.commissions ? t('artisan.commissionsYes') : t('artisan.commissionsNo')}</span>
+                <span>{artisan.shipping ? t('artisan.shippingYes') : t('artisan.shippingNo')}</span>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section class="pieces" aria-labelledby="pieces-heading">
+      <h2 class="eyebrow" id="pieces-heading">{t('artisan.piecesOf', { name: artisan.name })}</h2>
+
+      <ul class="pieces__list" role="list">
+        {
+          artisan.pieces.map((piece) => (
+            <li class="piece">
+              <div class="piece__media">
+                <Image
+                  src={piece.image}
+                  alt={piece.alt}
+                  widths={[400, 600, 800]}
+                  sizes="(min-width: 64em) 22rem, (min-width: 40em) 45vw, 92vw"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <h3 class="piece__title">{piece.title}</h3>
+              <p class="piece__price">
+                {piece.price === null ? t('artisan.priceOnRequest') : formatPrice(piece.price, locale)}
+              </p>
+              <p class="piece__description">{piece.description}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .back {
+    padding-block: var(--space-xl) 0;
+    font-size: var(--step--1);
+  }
+
+  .back a {
+    text-decoration: none;
+    color: var(--text-muted);
+    transition: color var(--duration-fast) var(--ease);
+  }
+
+  .back a:hover {
+    color: var(--color-buoy);
+  }
+
+  /* ---------------------------------------------------------------- profile */
+
+  .profile {
+    display: grid;
+    gap: var(--space-xl);
+    align-items: start;
+    padding-block: var(--space-xl) var(--section);
+  }
+
+  @media (min-width: 64em) {
+    .profile {
+      grid-template-columns: minmax(0, 28rem) minmax(0, 1fr);
+      gap: var(--space-3xl);
+    }
+  }
+
+  .profile__media {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background-color: var(--color-shell);
+  }
+
+  .profile__media::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    height: 4px;
+    background-color: var(--color-buoy);
+  }
+
+  .profile__media img {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+
+  .profile__craft {
+    font-size: var(--step--2);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-buoy);
+  }
+
+  .profile h1 {
+    margin-block-start: var(--space-2xs);
+    font-size: var(--step-4);
+  }
+
+  .profile__workshop {
+    margin-block-start: var(--space-3xs);
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    color: var(--text-muted);
+  }
+
+  .profile__summary {
+    max-width: 46ch;
+    margin-block-start: var(--space-m);
+    font-size: var(--step-1);
+    line-height: var(--leading-snug);
+    color: var(--color-ink-soft);
+  }
+
+  .profile__prose {
+    margin-block-start: var(--space-l);
+  }
+
+  /* ---------------------------------------------------------------- contact */
+
+  .contact {
+    border-radius: var(--radius);
+  }
+
+  .contact__inner {
+    display: grid;
+    gap: var(--space-xl);
+    padding: var(--space-xl) var(--space-l);
+  }
+
+  @media (min-width: 52em) {
+    .contact__inner {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+      gap: var(--space-3xl);
+      padding: var(--space-2xl);
+    }
+  }
+
+  .contact__lead {
+    max-width: 34ch;
+    margin-block-start: var(--space-m);
+    color: var(--text-on-deep-muted);
+    font-size: var(--step--1);
+  }
+
+  .contact__links {
+    display: grid;
+    gap: var(--space-s);
+    padding-inline-start: 0;
+    list-style: none;
+  }
+
+  .contact__link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3xs);
+    padding-block-end: var(--space-s);
+    border-block-end: var(--rule-deep);
+    text-decoration: none;
+    transition: color var(--duration-fast) var(--ease);
+  }
+
+  .contact__link:hover {
+    color: var(--color-buoy-bright);
+  }
+
+  .contact__label {
+    font-size: var(--step--2);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-on-deep-muted);
+  }
+
+  .contact__value {
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+  }
+
+  .contact__social {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2xs) var(--space-s);
+    margin-block-start: var(--space-m);
+  }
+
+  .contact__social a {
+    text-underline-offset: 0.18em;
+  }
+
+  .contact__facts {
+    display: grid;
+    gap: var(--space-m);
+    margin-block-start: var(--space-l);
+    padding-block-start: var(--space-l);
+    border-block-start: var(--rule-deep);
+    font-size: var(--step--1);
+  }
+
+  .contact__facts dt {
+    font-size: var(--step--2);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-on-deep-muted);
+  }
+
+  .contact__facts dd {
+    display: grid;
+    gap: var(--space-3xs);
+    margin-inline-start: 0;
+    margin-block-start: var(--space-2xs);
+  }
+
+  .contact__directions {
+    color: var(--text-on-deep-muted);
+  }
+
+  /* ----------------------------------------------------------------- pieces */
+
+  .pieces {
+    padding-block: var(--section);
+  }
+
+  .pieces__list {
+    display: grid;
+    gap: var(--space-xl) var(--space-l);
+    grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr));
+    margin-block-start: var(--space-xl);
+    padding-inline-start: 0;
+    list-style: none;
+  }
+
+  .piece__media {
+    overflow: hidden;
+    border-radius: var(--radius);
+    background-color: var(--color-shell);
+  }
+
+  .piece__media img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    transition: transform var(--duration-slow) var(--ease-out);
+  }
+
+  .piece:hover .piece__media img {
+    transform: scale(1.03);
+  }
+
+  .piece__title {
+    margin-block-start: var(--space-s);
+    font-size: var(--step-1);
+  }
+
+  .piece__price {
+    margin-block-start: var(--space-3xs);
+    font-size: var(--step--1);
+    font-weight: var(--weight-semibold);
+    color: var(--color-buoy);
+  }
+
+  .piece__description {
+    margin-block-start: var(--space-2xs);
+    font-size: var(--step--1);
+    line-height: var(--leading-body);
+    color: var(--color-ink-soft);
+  }
+</style>

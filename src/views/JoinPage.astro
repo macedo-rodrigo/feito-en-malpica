@@ -1,0 +1,256 @@
+---
+/**
+ * "Únete": the prose from content, plus a form.
+ *
+ * The form has no backend. On submit it assembles what was typed into a
+ * mailto: and hands it to the visitor's own mail app, so there is nothing to
+ * host, nothing storing anyone's data and no spam queue to police. A plain
+ * mailto: link sits underneath for anyone whose browser will not open one.
+ *
+ * To switch to Netlify Forms later: add name="unete" data-netlify="true" to
+ * the <form>, add a hidden form-name input, and drop the submit handler.
+ */
+import { getCollection, render } from 'astro:content';
+import Base from '@/layouts/Base.astro';
+import { CRAFTS } from '../content.config';
+import { CONTACT_EMAIL } from '@/data/site';
+import { mailtoHref } from '@/lib/contact';
+import type { Locale } from '@/i18n/locales';
+import { useTranslations } from '@/i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const [doc] = await getCollection('pages', ({ id }) => id === `${locale}/join`);
+if (!doc) throw new Error(`Missing src/content/pages/${locale}/join.md`);
+const { Content } = await render(doc);
+
+const fields = [
+  { name: 'name', label: t('join.name'), type: 'text', required: true, autocomplete: 'name' },
+  { name: 'workshop', label: t('join.workshop'), type: 'text', required: false, autocomplete: 'organization' },
+  { name: 'email', label: t('join.email'), type: 'email', required: true, autocomplete: 'email' },
+  { name: 'phone', label: t('join.phone'), type: 'tel', required: false, autocomplete: 'tel' },
+] as const;
+---
+
+<Base locale={locale} page="join" title={doc.data.title} description={doc.data.description}>
+  <div class="container">
+    <header class="join-head">
+      <h1>{doc.data.heading}</h1>
+      {doc.data.lead && <p class="lead join-head__lead">{doc.data.lead}</p>}
+    </header>
+
+    <div class="join-grid">
+      <div class="prose join-prose">
+        <Content />
+      </div>
+
+      <section class="form-panel on-deep" aria-labelledby="join-form-heading">
+        <h2 class="eyebrow eyebrow--plain" id="join-form-heading">{t('join.formTitle')}</h2>
+
+        <form
+          class="form"
+          data-join-form
+          data-subject={t('join.mailSubject')}
+          data-email={CONTACT_EMAIL}
+        >
+          {
+            fields.map((field) => (
+              <p class="field">
+                <label for={`join-${field.name}`}>
+                  {field.label}
+                  <span class="field__hint">
+                    {field.required ? t('join.required') : t('join.optional')}
+                  </span>
+                </label>
+                <input
+                  type={field.type}
+                  id={`join-${field.name}`}
+                  name={field.name}
+                  required={field.required}
+                  autocomplete={field.autocomplete}
+                />
+              </p>
+            ))
+          }
+
+          <p class="field">
+            <label for="join-craft">
+              {t('join.craft')}
+              <span class="field__hint">{t('join.optional')}</span>
+            </label>
+            <select id="join-craft" name="craft">
+              <option value=""></option>
+              {CRAFTS.map((craft) => <option value={craft}>{t(`craft.${craft}`)}</option>)}
+            </select>
+          </p>
+
+          <p class="field">
+            <label for="join-message">
+              {t('join.message')}
+              <span class="field__hint">{t('join.required')}</span>
+            </label>
+            <textarea id="join-message" name="message" rows="5" required></textarea>
+          </p>
+
+          <p class="form__actions">
+            <button type="submit" class="button button--primary">{t('join.submit')}</button>
+          </p>
+        </form>
+
+        <p class="form__fallback">
+          {t('join.fallback')}{' '}
+          <a href={mailtoHref(CONTACT_EMAIL, { subject: t('join.mailSubject') })}>{CONTACT_EMAIL}</a>
+        </p>
+      </section>
+    </div>
+  </div>
+</Base>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-join-form]');
+
+  if (form) {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      // Let the browser do the required-field reporting rather than our own.
+      if (!form.reportValidity()) return;
+
+      const data = new FormData(form);
+      const value = (key: string) => String(data.get(key) ?? '').trim();
+
+      const labelFor = (id: string) =>
+        document.querySelector(`label[for="${id}"]`)?.firstChild?.textContent?.trim() ?? id;
+
+      const lines = ['name', 'workshop', 'email', 'phone', 'craft']
+        .filter((key) => value(key) !== '')
+        .map((key) => {
+          const select = key === 'craft' ? form.querySelector<HTMLSelectElement>('#join-craft') : null;
+          const shown = select ? select.options[select.selectedIndex]?.text ?? value(key) : value(key);
+          return `${labelFor(`join-${key}`)}: ${shown}`;
+        });
+
+      lines.push('', value('message'));
+
+      const email = form.dataset.email ?? '';
+      const params = new URLSearchParams({
+        subject: form.dataset.subject ?? '',
+        body: lines.join('\n'),
+      });
+      window.location.href = `mailto:${email}?${params.toString().replace(/\+/g, '%20')}`;
+    });
+  }
+</script>
+
+<style>
+  .join-head {
+    padding-block: var(--section) var(--space-xl);
+    border-block-end: var(--rule);
+  }
+
+  .join-head__lead {
+    margin-block-start: var(--space-m);
+    max-width: 42ch;
+  }
+
+  .join-grid {
+    display: grid;
+    gap: var(--space-2xl);
+    align-items: start;
+    padding-block: var(--space-2xl) var(--section);
+  }
+
+  @media (min-width: 60em) {
+    .join-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+      gap: var(--space-3xl);
+    }
+  }
+
+  .form-panel {
+    padding: var(--space-xl) var(--space-l);
+    border-radius: var(--radius);
+  }
+
+  .form {
+    display: grid;
+    gap: var(--space-m);
+    margin-block-start: var(--space-l);
+  }
+
+  .field {
+    display: grid;
+    gap: var(--space-2xs);
+  }
+
+  .field label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2xs);
+    font-size: var(--step--1);
+    font-weight: var(--weight-medium);
+  }
+
+  .field__hint {
+    font-size: var(--step--2);
+    font-weight: var(--weight-body);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-on-deep-muted);
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    padding: 0.6em 0.75em;
+    border: 1px solid rgb(169 192 202 / 0.35);
+    border-radius: var(--radius);
+    background-color: rgb(246 243 237 / 0.06);
+    color: var(--text-on-deep);
+    font-size: var(--step--1);
+    font-family: inherit;
+    transition: border-color var(--duration-fast) var(--ease);
+  }
+
+  .field textarea {
+    resize: vertical;
+  }
+
+  .field input:hover,
+  .field select:hover,
+  .field textarea:hover,
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    border-color: var(--color-sea-mist);
+  }
+
+  /* The native dropdown list is painted by the OS, so it needs dark text. */
+  .field select option {
+    color: var(--color-ink);
+  }
+
+  .form__actions {
+    margin-block-start: var(--space-2xs);
+  }
+
+  .form__fallback {
+    margin-block-start: var(--space-l);
+    padding-block-start: var(--space-l);
+    border-block-start: var(--rule-deep);
+    font-size: var(--step--2);
+    line-height: var(--leading-body);
+    color: var(--text-on-deep-muted);
+  }
+
+  .form__fallback a {
+    color: var(--color-buoy-bright);
+    text-underline-offset: 0.18em;
+  }
+</style>

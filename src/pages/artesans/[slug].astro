@@ -1,0 +1,16 @@
+---
+import ArtisanPage from '@/views/ArtisanPage.astro';
+import { getArtisans } from '@/lib/artisans';
+
+export async function getStaticPaths() {
+  const artisans = await getArtisans('gl');
+  return artisans.map((artisan) => ({
+    params: { slug: artisan.slug },
+    props: { artisan },
+  }));
+}
+
+const { artisan } = Astro.props;
+---
+
+<ArtisanPage artisan={artisan} locale="gl" />

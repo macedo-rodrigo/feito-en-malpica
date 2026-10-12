@@ -47,10 +47,18 @@ const OG_LOCALES: Record<Locale, string> = {
 };
 
 const links = alternates(page, slug);
+
+/**
+ * Set PUBLIC_NOINDEX=true while the site is a work in progress. It keeps the
+ * preview out of search results, which matters here because the directory
+ * carries real business names next to placeholder phone numbers.
+ */
+const draft = import.meta.env.PUBLIC_NOINDEX === 'true';
 ---
 
 <title>{title}</title>
 <meta name="description" content={description} />
+{draft && <meta name="robots" content="noindex, nofollow" />}
 <link rel="canonical" href={canonical.href} />
 
 {

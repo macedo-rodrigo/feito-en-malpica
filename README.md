@@ -251,10 +251,26 @@ Hai máis detalle en `src/assets/malpica/LEEME.md`.
 
 ## Publicar
 
-Calquera servizo de sitios estáticos vale. A configuración é sempre a mesma:
+O repositorio xa trae un `netlify.toml`, así que en **Netlify** abonda con
+conectar o repositorio de GitHub: o comando de build, a carpeta e as cabeceiras
+de caché xa van configurados. En calquera outro servizo de sitios estáticos a
+configuración é a mesma:
 
 - **Comando de build:** `npm run build`
 - **Carpeta de publicación:** `dist`
+
+### Mentres o sitio está a medias
+
+`netlify.toml` define `PUBLIC_NOINDEX = "true"`. Con esa variable posta, cada
+páxina leva `<meta name="robots" content="noindex, nofollow">` e o
+`robots.txt` pecha o sitio enteiro aos buscadores. É o que se quere mentres
+haxa datos de marcador ao lado de nomes de negocios reais.
+
+**O día que se publique de verdade hai que borrar esa liña** de `netlify.toml`
+e volver despregar. Sen ela, o `robots.txt` volve abrir o sitio e inclúe a
+ligazón ao `sitemap.xml`.
+
+### O dominio
 
 Antes de publicar por primeira vez, cambia o dominio en `astro.config.mjs`:
 

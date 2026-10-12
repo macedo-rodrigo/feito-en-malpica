@@ -1,0 +1,92 @@
+---
+/**
+ * One 404 for the whole site: hosts serve a single not-found page regardless
+ * of which language directory the missing URL was under, so this one is in
+ * Galician and offers the other two languages a way out.
+ */
+import Base from '@/layouts/Base.astro';
+import Seal from '@/components/Seal.astro';
+import { LOCALES, LOCALE_NAMES, DEFAULT_LOCALE } from '@/i18n/locales';
+import { pathTo } from '@/i18n/routes';
+import { useTranslations } from '@/i18n/ui';
+
+const locale = DEFAULT_LOCALE;
+const t = useTranslations(locale);
+const others = LOCALES.filter((other) => other !== locale);
+---
+
+<Base
+  locale={locale}
+  page="home"
+  title={t('notFound.title')}
+  description={t('notFound.lead')}
+>
+  <div class="container not-found">
+    <div class="not-found__seal" aria-hidden="true">
+      <Seal variant="full" size="min(9rem, 30vw)" />
+    </div>
+
+    <h1>{t('notFound.heading')}</h1>
+    <p class="lead not-found__lead">{t('notFound.lead')}</p>
+
+    <p class="not-found__actions">
+      <a class="button button--primary" href={pathTo(locale, 'home')}>{t('notFound.home')}</a>
+      <a class="button button--ghost" href={pathTo(locale, 'artisans')}>{t('notFound.artisans')}</a>
+    </p>
+
+    <p class="not-found__languages">
+      {
+        others.map((other, i) => (
+          <>
+            {i > 0 && <span aria-hidden="true"> · </span>}
+            <a href={pathTo(other, 'home')} hreflang={other} lang={other}>
+              {LOCALE_NAMES[other]}
+            </a>
+          </>
+        ))
+      }
+    </p>
+  </div>
+</Base>
+
+<style>
+  .not-found {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-block: var(--section);
+  }
+
+  .not-found__seal {
+    margin-block-end: var(--space-l);
+    /* Cancels the seal's built-in clear space against the container edge. */
+    margin-inline-start: calc(min(9rem, 30vw) * -0.2);
+    color: var(--color-ink);
+    opacity: 0.9;
+  }
+
+  .not-found h1 {
+    max-width: 14ch;
+    font-size: var(--step-4);
+  }
+
+  .not-found__lead {
+    max-width: 44ch;
+    margin-block-start: var(--space-m);
+  }
+
+  .not-found__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-s);
+    margin-block-start: var(--space-xl);
+  }
+
+  .not-found__languages {
+    margin-block-start: var(--space-2xl);
+    padding-block-start: var(--space-m);
+    border-block-start: var(--rule);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+</style>

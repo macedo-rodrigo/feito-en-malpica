@@ -1,0 +1,94 @@
+---
+/**
+ * The editorial pages - "O proxecto" and anything else that is just a title
+ * and a run of prose. The copy lives in src/content/pages/<locale>/<slug>.md
+ * so it can be edited without opening a component.
+ *
+ * "Únete" uses JoinPage instead, because it carries a form.
+ */
+import { getCollection, render } from 'astro:content';
+import Base from '@/layouts/Base.astro';
+import Seal from '@/components/Seal.astro';
+import type { Locale } from '@/i18n/locales';
+import type { PageKey } from '@/i18n/routes';
+
+interface Props {
+  locale: Locale;
+  /** Which page this is, for the nav state and the hreflang alternates. */
+  page: PageKey;
+  /** File name under src/content/pages/<locale>/. */
+  entry: string;
+  /** Show the full seal beside the heading. */
+  seal?: boolean;
+}
+
+const { locale, page, entry, seal = false } = Astro.props;
+
+const [doc] = await getCollection('pages', ({ id }) => id === `${locale}/${entry}`);
+if (!doc) throw new Error(`Missing src/content/pages/${locale}/${entry}.md`);
+const { Content } = await render(doc);
+---
+
+<Base locale={locale} page={page} title={doc.data.title} description={doc.data.description}>
+  <div class="container">
+    <header class="article-head">
+      <div>
+        <h1>{doc.data.heading}</h1>
+        {doc.data.lead && <p class="lead article-head__lead">{doc.data.lead}</p>}
+      </div>
+      {
+        seal && (
+          <div class="article-head__seal" aria-hidden="true">
+            <Seal variant="full" size="min(11rem, 34vw)" />
+          </div>
+        )
+      }
+    </header>
+
+    <div class="prose article-body">
+      <Content />
+    </div>
+  </div>
+</Base>
+
+<style>
+  .article-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-xl);
+    padding-block: var(--section) var(--space-xl);
+    border-block-end: var(--rule);
+  }
+
+  .article-head h1 {
+    max-width: 14ch;
+  }
+
+  .article-head__lead {
+    margin-block-start: var(--space-m);
+    max-width: 42ch;
+  }
+
+  /* Drops out on narrow screens, where it would just push the text down. */
+  .article-head__seal {
+    display: none;
+  }
+
+  @media (min-width: 48em) {
+    .article-head__seal {
+      display: block;
+      /* Cancels the seal's built-in clear space against the container edge. */
+      margin-inline-end: calc(min(11rem, 34vw) * -0.2);
+    }
+  }
+
+  .article-body {
+    padding-block: var(--space-2xl) var(--section);
+  }
+
+  .article-body :global(h2:first-child) {
+    margin-block-start: 0;
+  }
+</style>

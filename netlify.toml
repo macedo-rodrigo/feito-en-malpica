@@ -12,20 +12,10 @@
   # Delete this line (and redeploy) on the day it goes public for real.
   PUBLIC_NOINDEX = "true"
 
-# The site uses trailing slashes everywhere. Netlify adds the missing one by
-# itself for static pages, but not for the on-demand ones under /admin, where
-# the request reaches the function and finds no route - so typing /admin gave
-# a 404. These are the two addresses a person types or bookmarks; everything
-# deeper is reached by a link, and those all carry the slash.
-[[redirects]]
-  from = "/admin"
-  to = "/admin/"
-  status = 301
-
-[[redirects]]
-  from = "/admin/entrar"
-  to = "/admin/entrar/"
-  status = 301
+# No trailing-slash redirects here. Netlify ignores the trailing slash when
+# matching a rule, so `from = "/admin"` catches /admin/ as well and redirects
+# it to itself - an infinite loop. The on-demand routes accept both forms
+# instead, via `trailingSlash: 'ignore'` in astro.config.mjs.
 
 # Long-lived caching for the fingerprinted assets Astro emits. Their names
 # change whenever their contents do, so they can never go stale.

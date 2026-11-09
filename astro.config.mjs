@@ -28,9 +28,21 @@ export default defineConfig({
      */
     devFeatures: { environmentVariables: true, images: false, edgeFunctions: false },
   }),
-  // Directory URLs everywhere, in dev and in the built output, so links and
-  // end-to-end tests never disagree about a trailing slash.
-  trailingSlash: 'always',
+  /**
+   * Accept a URL with or without the trailing slash.
+   *
+   * Every link the site writes carries one, and `build.format: 'directory'`
+   * below still puts each page at its own index.html, so nothing about the
+   * output changes. What changes is what the server accepts: with 'always',
+   * the on-demand pages under /admin answered a bare /admin with the 404
+   * page, because the host only patches a missing slash for static files
+   * and these are not static.
+   *
+   * Doing it here rather than with a host redirect: Netlify ignores the
+   * trailing slash when matching a rule, so a rule from /admin to /admin/
+   * also matches /admin/ and redirects it to itself, forever.
+   */
+  trailingSlash: 'ignore',
   build: { format: 'directory' },
 
   // Galician is the default and lives at the root; Spanish and English are

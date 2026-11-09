@@ -5,6 +5,7 @@
  *   npm run admin:check
  */
 import { readFile } from 'node:fs/promises';
+import { parseEnv } from './lib/dotenv.mjs';
 
 const FILE = '.env';
 
@@ -17,21 +18,10 @@ try {
   process.exit(1);
 }
 
-/** Minimal dotenv parse: KEY=value, with optional quotes around the value. */
-function parse(text) {
-  const values = {};
-  // Join lines that continue inside double quotes, so a multi-line value
-  // still reads as one.
-  const normalised = text.replace(/\r\n/g, '\n');
-  const pattern = /^([A-Z_][A-Z0-9_]*)=(?:"([\s\S]*?)"|'([\s\S]*?)'|(.*))$/gm;
-  for (const match of normalised.matchAll(pattern)) {
-    values[match[1]] = (match[2] ?? match[3] ?? match[4] ?? '').trim();
-  }
-  return values;
-}
+const { values: env, problems: malformed } = parseEnv(raw);
 
-const env = parse(raw);
-const problems = [];
+
+const problems = malformed.map((p) => `A liña ${p.line} do .env está mal: ${p.message}`);
 const notes = [];
 
 // --- accounts -------------------------------------------------------------

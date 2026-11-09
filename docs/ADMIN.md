@@ -41,8 +41,17 @@ Si prefieres hacerlo a mano, en Netlify están en
 Una línea por persona. Genera cada una con:
 
 ```bash
-npm run admin:password -- correo@ejemplo.com "la contraseña que elijas"
+npm run admin:password -- correo@ejemplo.com
 ```
+
+Te pedirá la contraseña y te la hará repetir. **No se escribe en pantalla ni
+se pasa como argumento**, para que no quede en el historial de la terminal.
+
+Mínimo 16 caracteres. Como no hay bloqueo tras varios intentos fallidos, la
+longitud es la defensa: tres o cuatro palabras sueltas
+(`peirao-lonxa-vimbio-marea`) aguantan mucho mejor que algo corto con
+símbolos, y se recuerdan sin apuntarlas. **No uses el nombre del sitio**: es
+lo primero que probaría cualquiera.
 
 Imprime una línea con el correo y la contraseña cifrada. Todas juntas van en
 `ADMIN_USERS`, **separadas por punto y coma y en una sola línea**, para que
@@ -161,7 +170,8 @@ estaría diciendo qué cuentas existen.
 cada petición en un proceso distinto y no hay dónde llevar la cuenta sin
 añadir una base de datos. La defensa es una contraseña larga.
 
-**Si se filtra una contraseña**: genera otra línea con
+**Si se filtra una contraseña** — y basta con haberla pegado en un chat o
+haberla escrito en un comando: genera otra línea con
 `npm run admin:password`, sustituye la de esa persona en `ADMIN_USERS` y
 vuelve a desplegar. Las demás cuentas no se tocan. Si quieres echar a alguien
 de inmediato, cambia también el `SESSION_SECRET`: eso cierra todas las

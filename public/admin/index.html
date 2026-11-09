@@ -1,18 +1,3 @@
----
-/**
- * The editor.
- *
- * A real route rather than a file dropped in public/, because the dev server
- * routes /admin/ through Astro and would answer a public folder with the 404
- * page. This way the address is the same on this computer and on the live
- * site.
- *
- * Deliberately not using the Base layout: the editor paints the whole window
- * and wants no header, footer or site styles around it. Its configuration
- * stays in public/admin/config.yml, which the editor fetches at runtime.
- */
----
-
 <!doctype html>
 <html lang="gl">
   <head>
@@ -22,7 +7,7 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>Editor — Feito en Malpica</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <style is:inline>
+    <style>
       /* Shown only until the editor loads, and left standing if it never does. */
       .boot {
         max-width: 34rem;
@@ -38,6 +23,14 @@
       .boot code {
         background: #f6f3ed;
         padding: 0.1em 0.3em;
+      }
+      @media (prefers-color-scheme: dark) {
+        .boot {
+          color: #f6f3ed;
+        }
+        .boot code {
+          background: #2a3136;
+        }
       }
     </style>
   </head>
@@ -57,23 +50,29 @@
       later. Pinned to a major version so an upstream release cannot change
       the editor under the people using it.
 
+      This is a plain static file on purpose, not an Astro route. The dev
+      server reloads the page whenever a file on disk changes, and the editor
+      writes files - it would reload itself mid-save and truncate content.
+      Locally it is served by `npm run admin`, which has no file watcher.
+
       Loaded with a plain src, not an `import`: imported, the bundle runs but
-      never mounts. `is:inline` keeps Astro from trying to bundle a remote URL.
+      never mounts.
     -->
-    <script is:inline type="module" src="https://unpkg.com/@sveltia/cms@0/dist/sveltia-cms.js"
+    <script
+      type="module"
+      src="https://unpkg.com/@sveltia/cms@0/dist/sveltia-cms.js"
     ></script>
 
     <!-- Clears the fallback once the editor has actually painted something. -->
-    <script is:inline>
+    <script>
       const boot = document.getElementById('boot');
-      const stop = setTimeout(() => clearInterval(poll), 20000);
       const poll = setInterval(() => {
         if (document.body.children.length > 2) {
           boot?.remove();
           clearInterval(poll);
-          clearTimeout(stop);
         }
       }, 200);
+      setTimeout(() => clearInterval(poll), 20000);
     </script>
   </body>
 </html>

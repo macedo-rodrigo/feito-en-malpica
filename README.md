@@ -35,7 +35,7 @@ npm run brand:trace           # revectoriza o logo desde brand/source/
 npm run fonts:sync            # copia as tipografías a public/fonts/
 npm run images:placeholders   # xera imaxes de exemplo que falten
 npm run shots                 # capturas de dist/ para revisar o deseño
-npm run admin                 # abre o editor contra os ficheiros deste PC
+npm run admin                 # editor local, nun servidor estático aparte
 ```
 
 ---

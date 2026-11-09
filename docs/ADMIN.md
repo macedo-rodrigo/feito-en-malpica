@@ -28,13 +28,28 @@ navegadores veránaa en inglés; pódese cambiar a man dentro do editor, en
 npm run admin
 ```
 
-Ábrese `http://localhost:4321/admin/`. Preme en **«Traballar co repositorio
+Ábrese `http://localhost:4322/admin/`. Preme en **«Traballar cun repositorio
 local»** e escolle a carpeta do proxecto cando o pida. Non hai login: edita os
-ficheiros deste ordenador directamente. É a mellor maneira de ver como queda
-o panel antes de darllo a ninguén.
+ficheiros deste ordenador directamente. É a mellor maneira de ver como queda o
+panel antes de darllo a ninguén.
 
 Os cambios quedan no teu disco como calquera outra edición: despois hai que
 facer `git commit` e `git push` como sempre.
+
+### Por que non `npm run dev`
+
+O editor **non se abre co servidor de desenvolvemento**, e é a propósito. Ese
+servidor recarga a páxina cada vez que cambia un ficheiro; como o editor
+escribe ficheiros, pode recargarse a si mesmo a medio gardar e deixar o
+contido truncado. O propio Sveltia avisa diso.
+
+Por iso `npm run admin` usa un servidor estático aparte
+(`scripts/serve-admin.mjs`), sen vixilancia de ficheiros. En produción non
+fai falla nada disto: o servidor do sitio serve `public/admin/` igual e non
+hai nada que recargue a páxina soa.
+
+Como consecuencia, `http://localhost:4321/admin/` (o porto do `npm run dev`)
+dá un 404. Non está roto: é que o editor non se serve por aí.
 
 ---
 

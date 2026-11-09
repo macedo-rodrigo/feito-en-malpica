@@ -14,7 +14,7 @@
     "fonts:sync": "node scripts/sync-fonts.mjs",
     "images:placeholders": "node scripts/generate-placeholders.mjs",
     "shots": "node scripts/shoot.mjs",
-    "admin": "astro dev --open /admin/"
+    "admin": "node scripts/serve-admin.mjs"
   },
   "engines": {
     "node": ">=20.3.0"

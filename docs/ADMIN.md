@@ -1,122 +1,124 @@
-# O panel de administración
+# El panel de administración
 
-Unha zona privada en `/admin` para dar de alta artesáns e cambiar os textos,
-coas pantallas do propio sitio. Quen edita entra cun correo e un contrasinal;
-non fai falla ter conta de GitHub nin saber nada de código.
+Una zona privada en `/admin` para dar de alta artesanos y cambiar los textos,
+con las pantallas del propio sitio. Quien edita entra con un correo y una
+contraseña; no hace falta tener cuenta de GitHub ni saber nada de código.
 
-## Como funciona
+## Cómo funciona
 
-Non hai base de datos. Ao gardar, o panel escribe un cambio no repositorio de
-GitHub e o servidor reconstrúe o sitio a partir del. **O cambio tarda un ou
-dous minutos en verse publicado**, e o panel avísao ao gardar.
+No hay base de datos. Al guardar, el panel escribe un cambio en el
+repositorio de GitHub y el servidor reconstruye el sitio a partir de él. **El
+cambio tarda uno o dos minutos en verse publicado**, y el panel lo avisa al
+guardar.
 
-As páxinas públicas seguen sendo ficheiros estáticos, igual de rápidas. Só as
-catro pantallas de `/admin` precisan servidor, e Netlify cóbreas no plan
-gratuíto.
+Las páginas públicas siguen siendo ficheros estáticos, igual de rápidas. Solo
+las cuatro pantallas de `/admin` necesitan servidor, y Netlify las cubre en el
+plan gratuito.
 
 ---
 
-## Poñelo en marcha
+## Ponerlo en marcha
 
-Fan falla cinco variables no servidor. En Netlify están en
+Hacen falta cinco variables en el servidor. En Netlify están en
 **Site configuration → Environment variables**.
 
-### 1. O contrasinal
+### 1. La contraseña
 
 ```bash
-npm run admin:password -- "o-contrasinal-que-escollas"
+npm run admin:password -- "la-contraseña-que-elijas"
 ```
 
-Imprime dúas das variables, xa listas para pegar:
+Imprime dos de las variables, ya listas para pegar:
 
-| Variable | Que é |
+| Variable | Qué es |
 | --- | --- |
-| `ADMIN_PASSWORD_HASH` | O contrasinal cifrado. O contrasinal en claro non se garda en ningures. |
-| `SESSION_SECRET` | Co que se asinan as sesións. Se se cambia, péchanse todas. |
+| `ADMIN_PASSWORD_HASH` | La contraseña cifrada. La contraseña en claro no se guarda en ningún sitio. |
+| `SESSION_SECRET` | Con lo que se firman las sesiones. Si se cambia, se cierran todas. |
 
-### 2. O correo
+### 2. El correo
 
-| Variable | Exemplo |
+| Variable | Ejemplo |
 | --- | --- |
-| `ADMIN_EMAIL` | `nadia@exemplo.gal` |
+| `ADMIN_EMAIL` | `nadia@ejemplo.gal` |
 
-É o correo co que se entra. Non se lle manda nada.
+Es el correo con el que se entra. No se le manda nada.
 
-### 3. O acceso ao repositorio
+### 3. El acceso al repositorio
 
-O panel precisa permiso para escribir no repositorio. Faise cun token:
+El panel necesita permiso para escribir en el repositorio. Se hace con un
+token:
 
 1. En GitHub: *Settings → Developer settings → Personal access tokens →
    Fine-grained tokens → Generate new token*.
-2. **Repository access**: só este repositorio.
-3. **Permissions → Contents: Read and write**. Nada máis.
-4. Ponlle unha caducidade e apúntaa nalgures: cando venza, o panel deixa de
-   gardar e hai que xerar outro.
+2. **Repository access**: solo este repositorio.
+3. **Permissions → Contents: Read and write**. Nada más.
+4. Ponle una caducidad y apúntala en algún sitio: cuando venza, el panel deja
+   de guardar y hay que generar otro.
 
 | Variable | Valor |
 | --- | --- |
-| `GITHUB_TOKEN` | O token que acabas de xerar |
+| `GITHUB_TOKEN` | El token que acabas de generar |
 | `GITHUB_REPO` | `macedo-rodrigo/feito-en-malpica` |
 | `GITHUB_BRANCH` | Opcional. Por defecto `main`. |
 
-Este token é a chave do repositorio: quen o teña pode cambiar o sitio. Vive só
-nas variables do servidor e nunca chega ao navegador.
+Este token es la llave del repositorio: quien lo tenga puede cambiar el sitio.
+Vive solo en las variables del servidor y nunca llega al navegador.
 
 ### 4. Probar
 
-Entra en `/admin`. Se falta algo, a páxina de entrada dirá **que** variable
-falta en vez de dar un erro.
+Entra en `/admin`. Si falta algo, la página de entrada dirá **qué** variable
+falta en vez de dar un error.
 
 ---
 
-## Probalo nesta máquina
+## Probarlo en esta máquina
 
-Crea un ficheiro `.env` na raíz (está ignorado por git):
+Crea un fichero `.env` en la raíz (está ignorado por git):
 
 ```
-ADMIN_EMAIL=probas@exemplo.gal
+ADMIN_EMAIL=pruebas@ejemplo.gal
 ADMIN_PASSWORD_HASH=...        # de npm run admin:password
 SESSION_SECRET=...             # de npm run admin:password
 GITHUB_REPO=macedo-rodrigo/feito-en-malpica
-GITHUB_TOKEN=...               # un token de verdade, se queres probar a gardar
+GITHUB_TOKEN=...               # un token de verdad, si quieres probar a guardar
 ```
 
 ```bash
 npm run dev
 ```
 
-E abre `http://localhost:4321/admin/`. Todo funciona igual, agás que **gardar
-escribe no repositorio de verdade**: se non queres iso, non poñas un token
-válido e quedarás na pantalla de erro ao gardar.
+Y abre `http://localhost:4321/admin/`. Todo funciona igual, salvo que
+**guardar escribe en el repositorio de verdad**: si no quieres eso, no pongas
+un token válido y te quedarás en la pantalla de error al guardar.
 
 ---
 
-## Que pode facer quen entra
+## Qué puede hacer quien entra
 
-| Pantalla | Que fai |
+| Pantalla | Qué hace |
 | --- | --- |
-| **Panel** | A lista de artesáns, con botón para engadir outro. |
-| **Ficha** | Nome, obradoiro, oficio, resumo, texto longo, foto de perfil, contacto, enderezo e as pezas con foto e prezo. |
+| **Panel** | La lista de artesanos, con botón para añadir otro. |
+| **Ficha** | Nombre, taller, oficio, resumen, texto largo, foto de perfil, contacto, dirección y las piezas con foto y precio. |
 
-As fotos súbense desde o formulario e gárdanse na carpeta do artesán. Déixao
-baleiro no prezo e na web porá «Consultar».
+Las fotos se suben desde el formulario y se guardan en la carpeta del
+artesano. Deja el precio vacío y en la web pondrá «Consultar».
 
-### O que non se pode facer desde o panel
+### Lo que no se puede hacer desde el panel
 
-- **Borrar un artesán.** A propósito: é irreversible desde a web e fácil de
-  premer sen querer. Dise e bórrase a man.
-- **Traducir ao castelán ou ao inglés.** O que non estea traducido vese en
-  galego, que é o comportamento previsto. As traducións fanse desde `/editor`
-  ou a man.
-- **Cambiar os textos das páxinas** (portada, «O proxecto», «Únete»). Tamén
-  desde `/editor`.
-- **Engadir un oficio novo** á lista. Iso toca código.
+- **Borrar un artesano.** A propósito: es irreversible desde la web y fácil de
+  pulsar sin querer. Se dice y se borra a mano.
+- **Traducir al castellano o al inglés.** Lo que no esté traducido se ve en
+  gallego, que es el comportamiento previsto. Las traducciones se hacen desde
+  `/editor` o a mano.
+- **Cambiar los textos de las páginas** (portada, «O proxecto», «Únete»).
+  También desde `/editor`.
+- **Añadir un oficio nuevo** a la lista. Eso toca código.
 
-## `/editor`, a porta de atrás
+## `/editor`, la puerta de atrás
 
-En `/editor` segue estando o editor anterior (Sveltia), que entra con GitHub
-e chega a todo: traducións, textos das páxinas e borrado. É a rede de
-seguridade para quen si é técnico. Para usalo nesta máquina sen login:
+En `/editor` sigue estando el editor anterior (Sveltia), que entra con GitHub
+y llega a todo: traducciones, textos de las páginas y borrado. Es la red de
+seguridad para quien sí es técnico. Para usarlo en esta máquina sin login:
 
 ```bash
 npm run admin
@@ -124,32 +126,32 @@ npm run admin
 
 ---
 
-## Seguridade: o que hai e o que non
+## Seguridad: lo que hay y lo que no
 
-**O que hai.** O contrasinal gárdase cifrado con scrypt, nunca en claro. As
-sesións van nunha cookie asinada que o navegador non pode ler nin modificar,
-e caducan ás doce horas. Un intento fallido tarda medio segundo a propósito,
-para que non se poida probar unha lista de contrasinais a toda velocidade. A
-resposta é a mesma tanto se falla o correo coma o contrasinal, para non dicir
-cal das dúas metades acertaron.
+**Lo que hay.** La contraseña se guarda cifrada con scrypt, nunca en claro.
+Las sesiones van en una cookie firmada que el navegador no puede leer ni
+modificar, y caducan a las doce horas. Un intento fallido tarda medio segundo
+a propósito, para que no se pueda probar una lista de contraseñas a toda
+velocidad. La respuesta es la misma tanto si falla el correo como la
+contraseña, para no decir cuál de las dos mitades acertaron.
 
-**O que non hai.** Unha soa conta compartida: non se sabe quen fixo cada
-cambio. Non hai bloqueo tras varios intentos fallidos — o servidor atende
-cada petición nun proceso distinto e non hai onde levar a conta sen engadir
-unha base de datos. A defensa é un contrasinal longo.
+**Lo que no hay.** Una sola cuenta compartida: no se sabe quién hizo cada
+cambio. No hay bloqueo tras varios intentos fallidos — el servidor atiende
+cada petición en un proceso distinto y no hay dónde llevar la cuenta sin
+añadir una base de datos. La defensa es una contraseña larga.
 
-**Se se filtra o contrasinal**: xera outro con `npm run admin:password`,
-cambia as dúas variables no servidor e volve despregar. Cambiar o
-`SESSION_SECRET` pecha ademais todas as sesións abertas.
+**Si se filtra la contraseña**: genera otra con `npm run admin:password`,
+cambia las dos variables en el servidor y vuelve a desplegar. Cambiar el
+`SESSION_SECRET` cierra además todas las sesiones abiertas.
 
 ---
 
-## Pendente de probar
+## Pendiente de probar
 
-Todo o camiño está verificado agás un paso: **gardar contra GitHub de
-verdade** nunca se executou cun token real. O resto si: o login, a lista, o
-formulario, as validacións, e que o ficheiro que xera o formulario constrúe
-páxinas correctas nos tres idiomas.
+Todo el camino está verificado salvo un paso: **guardar contra GitHub de
+verdad** nunca se ha ejecutado con un token real. El resto sí: el login, la
+lista, el formulario, las validaciones, y que el fichero que genera el
+formulario construye páginas correctas en los tres idiomas.
 
-A primeira vez que se garde desde o panel convén mirar o repositorio e
-comprobar que apareceu o commit coa ficha e as fotos.
+La primera vez que se guarde desde el panel conviene mirar el repositorio y
+comprobar que ha aparecido el commit con la ficha y las fotos.

@@ -36,14 +36,8 @@ if (!email || !email.includes('@')) fail('Falta o correo, ou non parece un corre
 const password = (await askSecret('  Contrasinal (vense asteriscos): ')).trim();
 
 if (!password) fail('Non escribiches nada.');
-if (password.length < 16) {
-  fail(
-    `Demasiado curto: ${password.length} caracteres, fan falla 16.\n` +
-      '  Non hai bloqueo tras varios intentos fallidos, así que a lonxitude é\n' +
-      '  a defensa. Tres ou catro palabras soltas van mellor que algo curto\n' +
-      '  con símbolos: "peirao-lonxa-vimbio-marea" é máis forte e máis doado\n' +
-      '  de lembrar.',
-  );
+if (password.length < 6) {
+  fail(`Demasiado curto: ${password.length} caracteres, fan falla 6 como mínimo.`);
 }
 
 const confirmation = (await askSecret('  Repíteo: ')).trim();
@@ -51,6 +45,20 @@ if (confirmation !== password) {
   fail(
     `Non coinciden: ${password.length} caracteres a primeira vez, ` +
       `${confirmation.length} a segunda.`,
+  );
+}
+
+/**
+ * A warning rather than a refusal: the length is the caller's call, but a
+ * short one deserves saying out loud, because there is no lockout to make
+ * up for it and failed attempts can be thrown at the login in parallel.
+ */
+if (password.length < 12) {
+  console.log(
+    `\n  Aviso: ${password.length} caracteres é curto. Non hai bloqueo tras\n` +
+      '  varios intentos fallidos, así que esta é a única defensa. Se podes,\n' +
+      '  tres ou catro palabras soltas ("peirao-lonxa-vimbio") custan o mesmo\n' +
+      '  de escribir e moito máis de adiviñar.',
   );
 }
 

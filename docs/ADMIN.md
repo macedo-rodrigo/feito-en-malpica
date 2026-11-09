@@ -47,11 +47,16 @@ npm run admin:password -- correo@ejemplo.com
 Te pedirá la contraseña y te la hará repetir. **No se escribe en pantalla ni
 se pasa como argumento**, para que no quede en el historial de la terminal.
 
-Mínimo 16 caracteres. Como no hay bloqueo tras varios intentos fallidos, la
-longitud es la defensa: tres o cuatro palabras sueltas
-(`peirao-lonxa-vimbio-marea`) aguantan mucho mejor que algo corto con
-símbolos, y se recuerdan sin apuntarlas. **No uses el nombre del sitio**: es
-lo primero que probaría cualquiera.
+Mínimo 6 caracteres, y el comando avisa si es corta.
+
+**Por qué avisa:** no hay bloqueo tras varios intentos fallidos, así que la
+longitud es la única defensa. Hay una pausa de 600 ms por intento, pero eso
+no frena a quien lance intentos en paralelo, que es como se hace. Una
+contraseña de seis letras minúsculas se agota en minutos.
+
+Si puedes, tres o cuatro palabras sueltas (`peirao-lonxa-vimbio`) cuestan lo
+mismo de escribir y muchísimo más de adivinar. Y **no uses el nombre del
+sitio**: es lo primero que probaría cualquiera.
 
 Imprime una línea con el correo y la contraseña cifrada. Todas juntas van en
 `ADMIN_USERS`, **separadas por punto y coma y en una sola línea**, para que

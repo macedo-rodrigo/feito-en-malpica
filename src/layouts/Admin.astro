@@ -50,7 +50,7 @@ const { title, user = null } = Astro.props;
             <div class="admin-session">
               <span class="admin-session__who">{user}</span>
               <a class="admin-session__out" href="/" target="_blank" rel="noopener">Ver a web</a>
-              <form method="post" action="/admin/sair">
+              <form method="post" action="/admin/sair/">
                 <button type="submit" class="admin-session__out">Saír</button>
               </form>
             </div>

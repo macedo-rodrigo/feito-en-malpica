@@ -17,6 +17,9 @@ export const GET: APIRoute = ({ site }) => {
     : [
         'User-agent: *',
         'Allow: /',
+        // The editor is behind a GitHub login, but there is no reason for it
+        // to turn up in search results.
+        'Disallow: /admin/',
         '',
         `Sitemap: ${new URL('sitemap-index.xml', site).href}`,
         '',

@@ -1,0 +1,449 @@
+# Editor configuration for Sveltia CMS.
+#
+# Saving in the editor writes a commit to GitHub; the host rebuilds the site
+# from that commit a minute or two later. There is no database and no server.
+#
+# The validations below deliberately mirror src/content.config.ts. The site
+# refuses to build on invalid content, which is a good safety net but a bad
+# error message, so the rules are repeated here where they can be shown to
+# the person typing instead.
+
+backend:
+  name: github
+  repo: macedo-rodrigo/feito-en-malpica
+  branch: main
+  # The OAuth helper that lets GitHub log people in. See docs/ADMIN.md -
+  # until it is deployed and this line points at it, only the local editor
+  # (npm run admin) works.
+  base_url: https://REPLACE-WITH-YOUR-WORKER.workers.dev
+
+# Lets `npm run admin` edit the files on this computer, with no login at all.
+local_backend: true
+
+# Commit straight to main. The alternative, editorial_workflow, adds a
+# draft/review step through pull requests - more control, more to explain.
+publish_mode: simple
+
+# The editor takes its interface language from the browser, not from here,
+# so anyone browsing in Spanish gets a Spanish editor. There is no Galician
+# translation upstream; those browsers get English. It can also be changed by
+# hand inside the editor, under Settings.
+
+site_url: https://feito-en-malpica.netlify.app
+display_url: https://feito-en-malpica.netlify.app
+logo_url: https://feito-en-malpica.netlify.app/favicon.svg
+
+# Only used by collections that do not set their own. Artisans keep their
+# photographs inside their own folder, which is what the empty values in that
+# collection below are for.
+media_folder: public/uploads
+public_folder: /uploads
+
+collections:
+  # ------------------------------------------------------------- artisans
+  - name: artisans
+    label: Artesáns
+    label_singular: Artesán
+    description: >-
+      Cada artesán ten a súa carpeta, coas súas fotos dentro. Isto é o galego,
+      que é o idioma principal: os datos de contacto, as fotos e os prezos
+      viven só aquí, e as traducións collen deles.
+    folder: src/content/artisans
+    path: '{{slug}}/index'
+    # Empty means "beside the entry", so each artisan's photographs land in
+    # their own folder and travel with them.
+    media_folder: ''
+    public_folder: ''
+    create: true
+    delete: true
+    extension: md
+    format: yaml-frontmatter
+    summary: '{{name}} — {{workshop}}'
+    sortable_fields: [order, name]
+    fields:
+      - name: name
+        label: Nome e apelidos
+        widget: string
+        hint: O nome da persoa, non o do obradoiro.
+
+      - name: workshop
+        label: Nome do obradoiro
+        widget: string
+
+      - name: craft
+        label: Oficio
+        widget: select
+        options:
+          - { label: Impresión 3D, value: '3d-printing' }
+          - { label: Cerámica, value: ceramics }
+          - { label: Redes e aparellos, value: nets }
+          - { label: Cestaría, value: basketry }
+          - { label: Xoiaría, value: jewellery }
+          - { label: Madeira, value: wood }
+          - { label: Conservas, value: preserves }
+          - { label: Téxtil, value: textile }
+          - { label: Coiro, value: leather }
+        hint: >-
+          Para engadir un oficio que non estea nesta lista hai que tocar
+          código: dío e faise.
+
+      - name: summary
+        label: Resumo curto
+        widget: text
+        pattern: ['^[\s\S]{20,200}$', 'Ten que ter entre 20 e 200 caracteres.']
+        hint: >-
+          Unha ou dúas liñas. É o que se le na tarxeta do listado e o que sae
+          en Google.
+
+      - name: photo
+        label: Foto de perfil
+        widget: object
+        fields:
+          - name: src
+            label: Imaxe
+            widget: image
+            hint: Mellor vertical. Recórtase a 4:5.
+          - name: alt
+            label: Que se ve na foto
+            widget: text
+            pattern: ['^[\s\S]{15,}$', 'Describe a foto: polo menos 15 caracteres.']
+            hint: >-
+              Para quen non pode ver a imaxe. Describe o que aparece; non
+              repitas o nome do artesán.
+
+      - name: location
+        label: Onde está
+        widget: object
+        fields:
+          - { name: address, label: Enderezo, widget: string }
+          - name: directions
+            label: Como chegar
+            widget: string
+            required: false
+            hint: 'Opcional. Por exemplo: "A carón da lonxa, entrando polo peirao".'
+          - name: mapUrl
+            label: Ligazón a un mapa
+            widget: string
+            required: false
+            pattern: ['^$|^https?://', 'Ten que empezar por http:// ou https://']
+
+      - name: contact
+        label: Contacto
+        widget: object
+        hint: O correo é obrigatorio; o resto, se o hai.
+        fields:
+          - name: email
+            label: Correo electrónico
+            widget: string
+            pattern: ['^[^@\s]+@[^@\s]+\.[^@\s]+$', 'Non parece un correo válido.']
+          - name: phone
+            label: Teléfono
+            widget: string
+            required: false
+            pattern: ['^$|^\+[1-9]\d{6,14}$', 'Con prefixo e sen espazos: +34981000000']
+            hint: 'Con prefixo do país e sen espazos: +34981000000'
+          - name: whatsapp
+            label: WhatsApp
+            widget: string
+            required: false
+            pattern: ['^$|^\+[1-9]\d{6,14}$', 'Con prefixo e sen espazos: +34600000000']
+          - name: website
+            label: Páxina web
+            widget: string
+            required: false
+            pattern: ['^$|^https?://', 'Ten que empezar por http:// ou https://']
+
+      - name: social
+        label: Redes sociais
+        label_singular: Rede
+        widget: list
+        required: false
+        summary: '{{fields.network}} {{fields.handle}}'
+        fields:
+          - name: network
+            label: Rede
+            widget: select
+            options: [instagram, facebook, youtube, tiktok, pinterest, etsy]
+          - name: url
+            label: Ligazón
+            widget: string
+            pattern: ['^https?://', 'Ten que empezar por http:// ou https://']
+          - { name: handle, label: Nome de usuario, widget: string, required: false }
+
+      - name: commissions
+        label: Acepta encargos
+        widget: boolean
+        default: true
+
+      - name: shipping
+        label: Fai envíos
+        widget: boolean
+        default: false
+        hint: Se non, na ficha poñerá "Recollida no obradoiro".
+
+      - name: pieces
+        label: Pezas
+        label_singular: Peza
+        widget: list
+        min: 1
+        summary: '{{fields.title}}'
+        hint: Polo menos unha. Son as fotos da galería da ficha.
+        fields:
+          - { name: title, label: Título, widget: string }
+          - name: image
+            label: Foto
+            widget: image
+            hint: Recórtase cadrada, así que centra ben a peza.
+          - name: alt
+            label: Que se ve na foto
+            widget: text
+            pattern: ['^[\s\S]{15,}$', 'Describe a foto: polo menos 15 caracteres.']
+          - { name: description, label: Descrición, widget: text }
+          - name: price
+            label: Prezo en euros
+            widget: number
+            value_type: float
+            required: false
+            hint: Déixao baleiro e na web poñerá "Consultar".
+          - name: id
+            label: Código da peza
+            widget: string
+            pattern: ['^[a-z0-9-]+$', 'Só minúsculas, números e guións. Sen espazos nin acentos.']
+            hint: >-
+              Únese coas traducións desta peza. Ponlle algo como
+              "lampada-sisargas" e NON o cambies nunca despois.
+
+      - name: featured
+        label: Destacado na portada
+        widget: boolean
+        default: false
+
+      - name: order
+        label: Orde no listado
+        widget: number
+        value_type: int
+        default: 99
+        hint: Os números máis baixos saen primeiro.
+
+      - name: body
+        label: Texto longo da ficha
+        widget: markdown
+        hint: Dous ou tres parágrafos. Quen é, que fai e como traballa.
+
+  # --------------------------------------------------------- translations
+  - name: translations_es
+    label: Traducións ao castelán
+    label_singular: Tradución ao castelán
+    description: >-
+      Só o texto. O teléfono, o correo, as fotos e os prezos saen sempre da
+      ficha en galego. O que deixes baleiro aquí verase en galego.
+    folder: src/content/translations/es
+    create: true
+    delete: true
+    extension: md
+    format: yaml-frontmatter
+    slug: '{{fields.artisan}}'
+    summary: '{{artisan}}'
+    fields:
+      - name: artisan
+        label: Artesán
+        widget: relation
+        collection: artisans
+        value_field: '{{slug}}'
+        search_fields: [name, workshop]
+        display_fields: [name]
+        hint: Escolle de cal é esta tradución. Non se pode cambiar despois.
+      - { name: summary, label: Resumo curto, widget: text, required: false }
+      - { name: photoAlt, label: Que se ve na foto de perfil, widget: text, required: false }
+      - name: location
+        label: Onde está
+        widget: object
+        required: false
+        fields:
+          - { name: address, label: Enderezo, widget: string, required: false }
+          - { name: directions, label: Como chegar, widget: string, required: false }
+      - name: pieces
+        label: Pezas
+        label_singular: Peza
+        widget: list
+        required: false
+        summary: '{{fields.id}}'
+        fields:
+          - name: id
+            label: Código da peza
+            widget: string
+            hint: Exactamente o mesmo código que na ficha en galego.
+          - { name: title, label: Título, widget: string, required: false }
+          - { name: description, label: Descrición, widget: text, required: false }
+          - { name: alt, label: Que se ve na foto, widget: text, required: false }
+      - { name: body, label: Texto longo, widget: markdown, required: false }
+
+  - name: translations_en
+    label: Traducións ao inglés
+    label_singular: Tradución ao inglés
+    description: >-
+      Só o texto. O teléfono, o correo, as fotos e os prezos saen sempre da
+      ficha en galego. O que deixes baleiro aquí verase en galego.
+    folder: src/content/translations/en
+    create: true
+    delete: true
+    extension: md
+    format: yaml-frontmatter
+    slug: '{{fields.artisan}}'
+    summary: '{{artisan}}'
+    fields:
+      - name: artisan
+        label: Artesán
+        widget: relation
+        collection: artisans
+        value_field: '{{slug}}'
+        search_fields: [name, workshop]
+        display_fields: [name]
+      - { name: summary, label: Resumo curto, widget: text, required: false }
+      - { name: photoAlt, label: Que se ve na foto de perfil, widget: text, required: false }
+      - name: location
+        label: Onde está
+        widget: object
+        required: false
+        fields:
+          - { name: address, label: Enderezo, widget: string, required: false }
+          - { name: directions, label: Como chegar, widget: string, required: false }
+      - name: pieces
+        label: Pezas
+        label_singular: Peza
+        widget: list
+        required: false
+        summary: '{{fields.id}}'
+        fields:
+          - { name: id, label: Código da peza, widget: string }
+          - { name: title, label: Título, widget: string, required: false }
+          - { name: description, label: Descrición, widget: text, required: false }
+          - { name: alt, label: Que se ve na foto, widget: text, required: false }
+      - { name: body, label: Texto longo, widget: markdown, required: false }
+
+  # ---------------------------------------------------------------- pages
+  - name: pages_gl
+    label: Páxinas (galego)
+    extension: md
+    format: yaml-frontmatter
+    files:
+      - name: home
+        label: Portada
+        file: src/content/pages/gl/home.md
+        fields:
+          - { name: title, label: Título para o navegador, widget: string }
+          - { name: description, label: Descrición para Google, widget: text }
+          - { name: heading, label: Titular grande, widget: string }
+          - { name: lead, label: Entradiña, widget: text, required: false }
+          - name: hero
+            label: Botóns do titular
+            widget: object
+            required: false
+            fields:
+              - { name: cta, label: Botón principal, widget: string }
+              - { name: ctaSecondary, label: Botón secundario, widget: string, required: false }
+          - name: values
+            label: Os tres puntos
+            widget: list
+            required: false
+            max: 4
+            summary: '{{fields.title}}'
+            fields:
+              - { name: title, label: Título, widget: string }
+              - { name: text, label: Texto, widget: text }
+          - { name: body, label: Texto sobre Malpica, widget: markdown }
+      - name: artisans
+        label: Listado de artesáns
+        file: src/content/pages/gl/artisans.md
+        fields: &page_simple_gl
+          - { name: title, label: Título para o navegador, widget: string }
+          - { name: description, label: Descrición para Google, widget: text }
+          - { name: heading, label: Titular, widget: string }
+          - { name: lead, label: Entradiña, widget: text, required: false }
+          - { name: body, label: Texto, widget: markdown, required: false }
+      - { name: about, label: O proxecto, file: src/content/pages/gl/about.md, fields: *page_simple_gl }
+      - { name: join, label: Únete, file: src/content/pages/gl/join.md, fields: *page_simple_gl }
+
+  - name: pages_es
+    label: Páxinas (castelán)
+    extension: md
+    format: yaml-frontmatter
+    files:
+      - name: home
+        label: Portada
+        file: src/content/pages/es/home.md
+        fields:
+          - { name: title, label: Título para o navegador, widget: string }
+          - { name: description, label: Descrición para Google, widget: text }
+          - { name: heading, label: Titular grande, widget: string }
+          - { name: lead, label: Entradiña, widget: text, required: false }
+          - name: hero
+            label: Botóns do titular
+            widget: object
+            required: false
+            fields:
+              - { name: cta, label: Botón principal, widget: string }
+              - { name: ctaSecondary, label: Botón secundario, widget: string, required: false }
+          - name: values
+            label: Os tres puntos
+            widget: list
+            required: false
+            max: 4
+            summary: '{{fields.title}}'
+            fields:
+              - { name: title, label: Título, widget: string }
+              - { name: text, label: Texto, widget: text }
+          - { name: body, label: Texto sobre Malpica, widget: markdown }
+      - name: artisans
+        label: Listado de artesáns
+        file: src/content/pages/es/artisans.md
+        fields: &page_simple_es
+          - { name: title, label: Título para o navegador, widget: string }
+          - { name: description, label: Descrición para Google, widget: text }
+          - { name: heading, label: Titular, widget: string }
+          - { name: lead, label: Entradiña, widget: text, required: false }
+          - { name: body, label: Texto, widget: markdown, required: false }
+      - { name: about, label: O proxecto, file: src/content/pages/es/about.md, fields: *page_simple_es }
+      - { name: join, label: Únete, file: src/content/pages/es/join.md, fields: *page_simple_es }
+
+  - name: pages_en
+    label: Páxinas (inglés)
+    extension: md
+    format: yaml-frontmatter
+    files:
+      - name: home
+        label: Portada
+        file: src/content/pages/en/home.md
+        fields:
+          - { name: title, label: Título para o navegador, widget: string }
+          - { name: description, label: Descrición para Google, widget: text }
+          - { name: heading, label: Titular grande, widget: string }
+          - { name: lead, label: Entradiña, widget: text, required: false }
+          - name: hero
+            label: Botóns do titular
+            widget: object
+            required: false
+            fields:
+              - { name: cta, label: Botón principal, widget: string }
+              - { name: ctaSecondary, label: Botón secundario, widget: string, required: false }
+          - name: values
+            label: Os tres puntos
+            widget: list
+            required: false
+            max: 4
+            summary: '{{fields.title}}'
+            fields:
+              - { name: title, label: Título, widget: string }
+              - { name: text, label: Texto, widget: text }
+          - { name: body, label: Texto sobre Malpica, widget: markdown }
+      - name: artisans
+        label: Listado de artesáns
+        file: src/content/pages/en/artisans.md
+        fields: &page_simple_en
+          - { name: title, label: Título para o navegador, widget: string }
+          - { name: description, label: Descrición para Google, widget: text }
+          - { name: heading, label: Titular, widget: string }
+          - { name: lead, label: Entradiña, widget: text, required: false }
+          - { name: body, label: Texto, widget: markdown, required: false }
+      - { name: about, label: O proxecto, file: src/content/pages/en/about.md, fields: *page_simple_en }
+      - { name: join, label: Únete, file: src/content/pages/en/join.md, fields: *page_simple_en }

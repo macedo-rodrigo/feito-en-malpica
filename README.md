@@ -35,7 +35,20 @@ npm run brand:trace           # revectoriza o logo desde brand/source/
 npm run fonts:sync            # copia as tipografías a public/fonts/
 npm run images:placeholders   # xera imaxes de exemplo que falten
 npm run shots                 # capturas de dist/ para revisar o deseño
+npm run admin                 # abre o editor contra os ficheiros deste PC
 ```
+
+---
+
+## Dúas maneiras de engadir contido
+
+**Co editor** (`/admin`), que é unha web con formularios: enche os campos,
+sube as fotos e garda. Non fai falla saber nada de código nin instalar nada.
+A posta en marcha está en [docs/ADMIN.md](docs/ADMIN.md); para probalo contra
+os ficheiros deste ordenador, `npm run admin`.
+
+**A man**, editando os ficheiros de texto. É o que se describe aquí abaixo, e
+serve tamén para entender que garda o editor en cada campo.
 
 ---
 
@@ -53,9 +66,8 @@ que apareza no enderezo web (en minúsculas, sen acentos e con guións):
 src/content/artisans/marisa-varela/
 ├── index.md                    ← os datos e o texto
 ├── perfil.jpg                  ← foto de perfil, proporción 4:5
-└── pezas/
-    ├── cesta-vimbio.jpg        ← unha foto por peza, cadrada (1:1)
-    └── nasa-pequena.jpg
+├── cesta-vimbio.jpg            ← unha foto por peza, cadrada (1:1)
+└── nasa-pequena.jpg
 ```
 
 ### 2. Escribir `index.md`
@@ -73,7 +85,7 @@ order: 2                            # os números máis baixos saen primeiro
 summary: >-                         # entre 20 e 200 caracteres
   Cestas de vimbio e nasas feitas a man en Buño, coma sempre.
 photo:
-  src: ./perfil.jpg
+  src: perfil.jpg
   alt: Marisa Varela tecendo unha cesta de vimbio na porta do obradoiro.
 location:
   address: Rúa do Forno 3. 15111 Buño, Malpica de Bergantiños
@@ -91,7 +103,7 @@ commissions: true                   # acepta encargos
 shipping: false                     # fai envíos
 pieces:
   - id: cesta-vimbio                # identificador único, non se cambia nunca
-    image: ./pezas/cesta-vimbio.jpg
+    image: cesta-vimbio.jpg
     alt: Cesta de vimbio de asa alta sobre unha mesa de madeira.
     title: Cesta de vimbio
     description: Cesta de compra de vimbio pelado, tecida en dous días.

@@ -31,6 +31,14 @@ export const SOCIAL_NETWORKS = [
 ] as const;
 
 /**
+ * An optional field left blank in the editor arrives as an empty string, not
+ * as a missing key. Left alone that fails every url(), email() and regex we
+ * have, so treat blank as absent before validating.
+ */
+const blank = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((value) => (value === '' ? undefined : value), schema);
+
+/**
  * Phone numbers are stored in E.164 - the one format that `tel:` and
  * `wa.me` links can both be built from without guessing. Display formatting
  * happens at render time (src/lib/contact.ts).
@@ -79,21 +87,21 @@ const artisans = defineCollection({
         }),
         location: z.object({
           address: z.string().min(5),
-          directions: z.string().optional(),
-          mapUrl: z.string().url().optional(),
+          directions: blank(z.string().optional()),
+          mapUrl: blank(z.string().url().optional()),
         }),
         contact: z.object({
-          phone: e164.optional(),
-          whatsapp: e164.optional(),
-          email: z.string().email().optional(),
-          website: z.string().url().optional(),
+          phone: blank(e164.optional()),
+          whatsapp: blank(e164.optional()),
+          email: blank(z.string().email().optional()),
+          website: blank(z.string().url().optional()),
         }),
         social: z
           .array(
             z.object({
               network: z.enum(SOCIAL_NETWORKS),
               url: z.string().url(),
-              handle: z.string().optional(),
+              handle: blank(z.string().optional()),
             }),
           )
           .default([]),
@@ -124,13 +132,19 @@ const artisans = defineCollection({
 const artisanTranslations = defineCollection({
   loader: glob({ pattern: '{es,en}/*.md', base: './src/content/translations' }),
   schema: z.object({
-    workshop: z.string().min(2).optional(),
-    summary: z.string().min(20).max(200).optional(),
-    photoAlt: z.string().min(15).optional(),
+    /**
+     * Which artisan this translates. Written by the editor, which also uses
+     * it to name the file; the loader keys off the filename, so this is
+     * documentation rather than data.
+     */
+    artisan: blank(z.string().optional()),
+    workshop: blank(z.string().min(2).optional()),
+    summary: blank(z.string().min(20).max(200).optional()),
+    photoAlt: blank(z.string().min(15).optional()),
     location: z
       .object({
-        address: z.string().optional(),
-        directions: z.string().optional(),
+        address: blank(z.string().optional()),
+        directions: blank(z.string().optional()),
       })
       .optional(),
     /** Only the pieces that need translating, matched by their `id`. */
@@ -138,9 +152,9 @@ const artisanTranslations = defineCollection({
       .array(
         z.object({
           id: z.string(),
-          title: z.string().optional(),
-          description: z.string().optional(),
-          alt: z.string().optional(),
+          title: blank(z.string().optional()),
+          description: blank(z.string().optional()),
+          alt: blank(z.string().optional()),
         }),
       )
       .default([]),
@@ -163,7 +177,7 @@ const pages = defineCollection({
     /** The visible <h1>, which is often shorter than the <title>. */
     heading: z.string().min(2),
     /** Standfirst under the heading. */
-    lead: z.string().optional(),
+    lead: blank(z.string().optional()),
     /** Home page only: the labels on the two hero buttons. */
     hero: z
       .object({

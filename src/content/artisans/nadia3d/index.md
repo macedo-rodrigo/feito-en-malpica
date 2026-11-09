@@ -17,7 +17,7 @@ summary: >-
   Impresión 3D en Malpica: figuras articuladas, miniaturas pintadas a man
   e pezas por encargo.
 photo:
-  src: ./perfil.jpg
+  src: perfil.jpg
   alt: >-
     Un polbo articulado impreso en 3D, en filamento tornasolado azul e
     dourado, apoiado no bordo dunha mesa branca.
@@ -32,7 +32,7 @@ commissions: true
 shipping: false
 pieces:
   - id: polbo-articulado
-    image: ./pezas/pulpo-articulado.jpg
+    image: pulpo-articulado.jpg
     alt: >-
       Polbo articulado impreso en 3D coas oito patas estendidas sobre unha
       mesa branca, en filamento que vai do azul ao verde e ao dourado.
@@ -43,7 +43,7 @@ pieces:
       dea a luz.
     price: null
   - id: hollow-knight-grande
-    image: ./pezas/hollow-knight-grande.jpg
+    image: hollow-knight-grande.jpg
     alt: >-
       Figura branca e negra do Cabaleiro Oco cunha capa azul, cun aguillón
       na man, sobre unha base de rocha gris.
@@ -53,7 +53,7 @@ pieces:
       aparte. Vai sobre unha base de rocha para deixar de pé.
     price: null
   - id: hollow-knight-pequena
-    image: ./pezas/hollow-knight-pequena.jpg
+    image: hollow-knight-pequena.jpg
     alt: >-
       Figura pequena do Cabaleiro Oco cunha capa gris, sobre unha peana
       redonda negra, sostida na palma da man.

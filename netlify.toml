@@ -6,7 +6,7 @@
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "20.11.1"
+  NODE_VERSION = "26"
   # Keeps the preview out of search results while the site is unfinished and
   # the directory still carries placeholder phone numbers.
   # Delete this line (and redeploy) on the day it goes public for real.

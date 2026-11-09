@@ -1,0 +1,218 @@
+---
+/**
+ * The dashboard: every artisan, and the way in to add another.
+ *
+ * The list comes from the content collection, which is the state of the last
+ * build. Since saving triggers a rebuild, it catches up within a couple of
+ * minutes; the banner after a save says so rather than letting it look
+ * broken.
+ */
+export const prerender = false;
+
+import { Image } from 'astro:assets';
+import Admin from '@/layouts/Admin.astro';
+import { currentUser, checkSetup, env } from '@/lib/admin-guard';
+import { getArtisans } from '@/lib/artisans';
+import { useTranslations } from '@/i18n/ui';
+
+const setup = checkSetup(env());
+if (!setup.ready) return Astro.redirect('/admin/entrar/', 303);
+
+const user = currentUser(Astro);
+if (!user) return Astro.redirect('/admin/entrar/', 303);
+
+const t = useTranslations('gl');
+const artisans = await getArtisans('gl');
+
+const saved = Astro.url.searchParams.get('gardado');
+---
+
+<Admin title="Artesáns" user={user}>
+  {
+    saved && (
+      <p class="saved" role="status">
+        <strong>Gardado.</strong> O cambio en <em>{saved}</em> estase a publicar: tarda
+        un par de minutos en verse na web. Non fai falla facer nada máis.
+      </p>
+    )
+  }
+
+  <header class="head">
+    <div>
+      <h1>Artesáns</h1>
+      <p class="lead">
+        {artisans.length === 1 ? 'Hai 1 artesán' : `Hai ${artisans.length} artesáns`} na web.
+      </p>
+    </div>
+    <a class="button button--primary" href="/admin/artesan/nova/">Engadir artesán</a>
+  </header>
+
+  <ul class="list" role="list">
+    {
+      artisans.map((artisan) => (
+        <li class="row">
+          <div class="row__photo">
+            <Image
+              src={artisan.photo.src}
+              alt=""
+              width={96}
+              height={120}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+
+          <div class="row__body">
+            <p class="row__craft">{t(`craft.${artisan.craft}`)}</p>
+            <h2 class="row__name">
+              <a href={`/admin/artesan/${artisan.slug}/`}>{artisan.name}</a>
+            </h2>
+            <p class="row__workshop">{artisan.workshop}</p>
+            <p class="row__meta">
+              {artisan.pieces.length === 1 ? '1 peza' : `${artisan.pieces.length} pezas`}
+              {artisan.featured && <span class="tag">Na portada</span>}
+            </p>
+          </div>
+
+          <p class="row__actions">
+            <a class="button button--ghost" href={`/admin/artesan/${artisan.slug}/`}>Editar</a>
+            <a class="row__view" href={`/artesans/${artisan.slug}/`} target="_blank" rel="noopener">
+              Ver na web
+            </a>
+          </p>
+        </li>
+      ))
+    }
+  </ul>
+
+  {
+    artisans.length === 0 && (
+      <p class="empty">Aínda non hai ningún artesán. Engade o primeiro.</p>
+    )
+  }
+</Admin>
+
+<style>
+  .saved {
+    margin-block-end: var(--space-xl);
+    padding: var(--space-s) var(--space-m);
+    border-inline-start: 3px solid var(--color-buoy);
+    background-color: rgb(184 67 26 / 0.08);
+    font-size: var(--step--1);
+    line-height: var(--leading-body);
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-m);
+    padding-block-end: var(--space-l);
+    border-block-end: var(--rule);
+  }
+
+  h1 {
+    font-size: var(--step-3);
+  }
+
+  .lead {
+    margin-block-start: var(--space-3xs);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .list {
+    display: grid;
+    gap: var(--space-s);
+    margin-block-start: var(--space-l);
+    padding-inline-start: 0;
+    list-style: none;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-m);
+    padding: var(--space-s);
+    background-color: var(--surface-raised);
+    border: var(--rule);
+    border-radius: var(--radius);
+  }
+
+  .row__photo img {
+    width: 4rem;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border-radius: var(--radius);
+    background-color: var(--color-shell);
+  }
+
+  .row__body {
+    flex: 1 1 14rem;
+  }
+
+  .row__craft {
+    font-size: var(--step--2);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-buoy);
+  }
+
+  .row__name {
+    margin-block-start: var(--space-3xs);
+    font-size: var(--step-1);
+  }
+
+  .row__name a {
+    text-decoration: none;
+  }
+
+  .row__name a:hover {
+    text-decoration-line: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  .row__workshop,
+  .row__meta {
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .row__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2xs);
+    margin-block-start: var(--space-2xs);
+  }
+
+  .tag {
+    padding: 0.15em 0.5em;
+    border: var(--rule);
+    border-radius: var(--radius);
+    font-size: var(--step--2);
+    letter-spacing: 0.02em;
+  }
+
+  .row__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-s);
+  }
+
+  .row__view {
+    font-size: var(--step--1);
+    color: var(--text-muted);
+    text-underline-offset: 0.18em;
+  }
+
+  .empty {
+    margin-block-start: var(--space-2xl);
+    font-size: var(--step-1);
+    color: var(--text-muted);
+  }
+</style>

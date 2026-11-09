@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+import netlify from '@astrojs/netlify';
 
 /**
  * TEMPORARY domain. Canonical URLs, hreflang, Open Graph images and the
@@ -11,6 +12,14 @@ const SITE = 'https://feito-en-malpica.netlify.app';
 
 export default defineConfig({
   site: SITE,
+
+  /**
+   * Still a static site. The adapter is here only so the handful of pages
+   * under /admin can opt out with `export const prerender = false`: they
+   * need a server to check a password and write to GitHub. Every public page
+   * is still built once, up front, and served as a file.
+   */
+  adapter: netlify(),
   // Directory URLs everywhere, in dev and in the built output, so links and
   // end-to-end tests never disagree about a trailing slash.
   trailingSlash: 'always',

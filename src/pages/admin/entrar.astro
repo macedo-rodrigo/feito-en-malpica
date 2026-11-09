@@ -1,0 +1,204 @@
+---
+/**
+ * Sign in.
+ *
+ * One shared account. Handles its own POST rather than using a separate
+ * endpoint so a failed attempt can re-render the form with the message in
+ * place, and so it works with JavaScript switched off.
+ */
+export const prerender = false;
+
+import Admin from '@/layouts/Admin.astro';
+import { checkSetup, adminConfig, currentUser, env } from '@/lib/admin-guard';
+import {
+  createSession,
+  emailMatches,
+  sessionCookieOptions,
+  verifyPassword,
+  SESSION_COOKIE,
+} from '@/lib/auth';
+
+const setup = checkSetup(env());
+
+// Already signed in: nothing to do here.
+if (setup.ready && currentUser(Astro)) {
+  return Astro.redirect('/admin/', 303);
+}
+
+let error: string | null = null;
+let email = '';
+
+if (Astro.request.method === 'POST' && setup.ready) {
+  const form = await Astro.request.formData();
+  email = String(form.get('email') ?? '');
+  const password = String(form.get('password') ?? '');
+  const config = adminConfig();
+
+  if (config) {
+    const ok =
+      emailMatches(email, config.email) && (await verifyPassword(password, config.passwordHash));
+
+    if (ok) {
+      Astro.cookies.set(
+        SESSION_COOKIE,
+        createSession(config.email, config.sessionSecret),
+        sessionCookieOptions(Astro.url.protocol === 'https:'),
+      );
+      return Astro.redirect('/admin/', 303);
+    }
+
+    // Same message either way: saying "that address does not exist" would
+    // tell someone guessing which half they got right. The pause takes the
+    // speed out of trying a list of passwords.
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    error = 'Correo ou contrasinal incorrectos.';
+  }
+}
+---
+
+<Admin title="Entrar">
+  <div class="login">
+    {
+      !setup.ready ? (
+        <section class="panel">
+          <h1>O editor aínda non está configurado</h1>
+          <p class="lead">
+            Faltan estas variables no servidor. Mentres non estean, non se pode
+            entrar.
+          </p>
+          <ul class="missing">
+            {setup.missing.map((name) => <li><code>{name}</code></li>)}
+          </ul>
+          <p class="note">
+            Como configuralas está en <code>docs/ADMIN.md</code>. Para xerar o
+            contrasinal: <code>npm run admin:password</code>.
+          </p>
+        </section>
+      ) : (
+        <section class="panel">
+          <h1>Entrar</h1>
+          <p class="lead">Para engadir ou cambiar artesáns.</p>
+
+          {error && <p class="error" role="alert">{error}</p>}
+
+          <form method="post" class="form">
+            <p class="field">
+              <label for="email">Correo</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={email}
+                required
+                autocomplete="username"
+                autofocus
+              />
+            </p>
+
+            <p class="field">
+              <label for="password">Contrasinal</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                autocomplete="current-password"
+              />
+            </p>
+
+            <p>
+              <button type="submit" class="button button--primary">Entrar</button>
+            </p>
+          </form>
+        </section>
+      )
+    }
+  </div>
+</Admin>
+
+<style>
+  .login {
+    display: flex;
+    justify-content: center;
+    padding-block: var(--space-2xl);
+  }
+
+  .panel {
+    width: min(100%, 26rem);
+    padding: var(--space-xl);
+    background-color: var(--surface-raised);
+    border: var(--rule);
+    border-radius: var(--radius);
+  }
+
+  h1 {
+    font-size: var(--step-2);
+  }
+
+  .lead {
+    margin-block-start: var(--space-2xs);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .error {
+    margin-block-start: var(--space-m);
+    padding: var(--space-xs) var(--space-s);
+    border-inline-start: 3px solid var(--color-buoy);
+    background-color: rgb(184 67 26 / 0.08);
+    font-size: var(--step--1);
+  }
+
+  .form {
+    display: grid;
+    gap: var(--space-m);
+    margin-block-start: var(--space-l);
+  }
+
+  .field {
+    display: grid;
+    gap: var(--space-2xs);
+  }
+
+  label {
+    font-size: var(--step--1);
+    font-weight: var(--weight-medium);
+  }
+
+  input {
+    width: 100%;
+    padding: 0.6em 0.75em;
+    border: 1px solid var(--color-shell);
+    border-radius: var(--radius);
+    background-color: var(--surface-page);
+    font-size: var(--step-0);
+    font-family: inherit;
+    color: var(--text-body);
+  }
+
+  input:hover,
+  input:focus {
+    border-color: var(--color-ink);
+  }
+
+  .missing {
+    display: grid;
+    gap: var(--space-2xs);
+    margin-block-start: var(--space-m);
+    padding-inline-start: 0;
+    list-style: none;
+  }
+
+  .missing code {
+    font-size: var(--step--1);
+    background-color: var(--color-shell);
+    padding: 0.15em 0.4em;
+  }
+
+  .note {
+    margin-block-start: var(--space-m);
+    font-size: var(--step--2);
+    color: var(--text-muted);
+    line-height: var(--leading-body);
+  }
+</style>

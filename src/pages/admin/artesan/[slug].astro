@@ -1,0 +1,674 @@
+---
+/**
+ * Add or edit one artisan.
+ *
+ * `nova` as the slug means a new one. Everything else loads the existing
+ * entry and prefills the form.
+ *
+ * On save this writes the Markdown file and any new photographs to GitHub in
+ * a single commit, and the host rebuilds the site from it. Nothing is stored
+ * anywhere else.
+ */
+export const prerender = false;
+
+import Admin from '@/layouts/Admin.astro';
+import { currentUser, checkSetup, githubConfig, env } from '@/lib/admin-guard';
+import { getArtisan } from '@/lib/artisans';
+import { CRAFTS } from '../../../content.config';
+import { useTranslations } from '@/i18n/ui';
+import { commitFiles, GitHubError } from '@/lib/github';
+import {
+  MAX_UPLOAD_BYTES,
+  safeFileName,
+  slugify,
+  toMarkdown,
+  validate,
+  type ArtisanInput,
+  type FieldError,
+  type PieceInput,
+} from '@/lib/artisan-form';
+
+const setup = checkSetup(env());
+if (!setup.ready) return Astro.redirect('/admin/entrar/', 303);
+
+const user = currentUser(Astro);
+if (!user) return Astro.redirect('/admin/entrar/', 303);
+
+const t = useTranslations('gl');
+const routeSlug = Astro.params.slug ?? 'nova';
+const isNew = routeSlug === 'nova';
+
+const existing = isNew ? undefined : await getArtisan(routeSlug, 'gl');
+if (!isNew && !existing) return Astro.redirect('/admin/', 303);
+
+/** The form's own shape, which is all strings because that is what a form is. */
+function fromExisting(): ArtisanInput {
+  const instagram = existing?.social.find((s) => s.network === 'instagram')?.url ?? '';
+  return {
+    slug: existing?.slug ?? '',
+    name: existing?.name ?? '',
+    workshop: existing?.workshop ?? '',
+    craft: existing?.craft ?? '',
+    summary: existing?.summary ?? '',
+    photoAlt: existing?.photo.alt ?? '',
+    photo: existing ? fileNameOf(existing.photo.src) : '',
+    address: existing?.location.address ?? '',
+    directions: existing?.location.directions ?? '',
+    mapUrl: existing?.location.mapUrl ?? '',
+    email: existing?.contact.email ?? '',
+    phone: existing?.contact.phone ?? '',
+    whatsapp: existing?.contact.whatsapp ?? '',
+    website: existing?.contact.website ?? '',
+    instagram,
+    commissions: existing?.commissions ?? true,
+    shipping: existing?.shipping ?? false,
+    featured: existing?.featured ?? false,
+    order: String(existing?.order ?? 99),
+    body: '',
+    pieces:
+      existing?.pieces.map((piece) => ({
+        id: piece.id,
+        title: piece.title,
+        description: piece.description,
+        alt: piece.alt,
+        price: piece.price === null ? '' : String(piece.price),
+        image: fileNameOf(piece.image),
+      })) ?? [],
+  };
+}
+
+/** Astro hands back a processed image object; we only need the file name. */
+function fileNameOf(image: { src: string } | string): string {
+  const src = typeof image === 'string' ? image : image.src;
+  return src.split('/').pop()?.split('?')[0] ?? '';
+}
+
+let input: ArtisanInput = fromExisting();
+let errors: FieldError[] = [];
+let failure: string | null = null;
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const text = (key: string) => String(form.get(key) ?? '').trim();
+  const file = (key: string) => {
+    const value = form.get(key);
+    return value instanceof File && value.size > 0 ? value : undefined;
+  };
+
+  const count = Number(form.get('pieceCount') ?? 0);
+  const pieces: PieceInput[] = [];
+  for (let i = 0; i < count; i += 1) {
+    // A removed row leaves its inputs behind but blanks the title.
+    if (!form.has(`piece-${i}-title`)) continue;
+    const title = String(form.get(`piece-${i}-title`) ?? '').trim();
+    const keep = String(form.get(`piece-${i}-image`) ?? '').trim();
+    if (!title && !keep && !file(`piece-${i}-upload`)) continue;
+
+    pieces.push({
+      id: String(form.get(`piece-${i}-id`) ?? '').trim() || slugify(title),
+      title,
+      description: String(form.get(`piece-${i}-description`) ?? '').trim(),
+      alt: String(form.get(`piece-${i}-alt`) ?? '').trim(),
+      price: String(form.get(`piece-${i}-price`) ?? '').trim(),
+      image: keep,
+      upload: file(`piece-${i}-upload`),
+    });
+  }
+
+  input = {
+    slug: text('slug') || slugify(text('workshop') || text('name')),
+    name: text('name'),
+    workshop: text('workshop'),
+    craft: text('craft'),
+    summary: text('summary'),
+    photoAlt: text('photoAlt'),
+    photo: text('photo'),
+    photoUpload: file('photoUpload'),
+    address: text('address'),
+    directions: text('directions'),
+    mapUrl: text('mapUrl'),
+    email: text('email'),
+    phone: text('phone'),
+    whatsapp: text('whatsapp'),
+    website: text('website'),
+    instagram: text('instagram'),
+    commissions: form.get('commissions') === 'on',
+    shipping: form.get('shipping') === 'on',
+    featured: form.get('featured') === 'on',
+    order: text('order') || '99',
+    body: String(form.get('body') ?? '').trim(),
+    pieces,
+  };
+
+  errors = validate(input);
+
+  if (errors.length === 0) {
+    const github = githubConfig();
+    if (!github) {
+      failure = 'Falta a configuración de GitHub no servidor.';
+    } else {
+      const folder = `src/content/artisans/${input.slug}`;
+      const writes: { path: string; content: string | Buffer }[] = [];
+      const deletions: string[] = [];
+
+      // Profile photograph.
+      let photoName = input.photo;
+      if (input.photoUpload) {
+        photoName = safeFileName(input.photoUpload.name, 'perfil');
+        writes.push({
+          path: `${folder}/${photoName}`,
+          content: Buffer.from(await input.photoUpload.arrayBuffer()),
+        });
+        if (input.photo && input.photo !== photoName) {
+          deletions.push(`${folder}/${input.photo}`);
+        }
+      }
+
+      // One photograph per piece.
+      const pieceNames: string[] = [];
+      for (const piece of input.pieces) {
+        if (piece.upload) {
+          const name = safeFileName(piece.upload.name, piece.id);
+          writes.push({
+            path: `${folder}/${name}`,
+            content: Buffer.from(await piece.upload.arrayBuffer()),
+          });
+          if (piece.image && piece.image !== name) deletions.push(`${folder}/${piece.image}`);
+          pieceNames.push(name);
+        } else {
+          pieceNames.push(piece.image);
+        }
+      }
+
+      writes.push({
+        path: `${folder}/index.md`,
+        content: toMarkdown(input, { photo: photoName, pieces: pieceNames }),
+      });
+
+      try {
+        await commitFiles(github, {
+          message: `${isNew ? 'Engadir' : 'Actualizar'} ${input.name} (${input.workshop})\n\nDesde o editor, por ${user}.`,
+          files: writes,
+          // Never delete a file that is also being written in the same commit.
+          deletions: deletions.filter((path) => !writes.some((w) => w.path === path)),
+        });
+        return Astro.redirect(`/admin/?gardado=${encodeURIComponent(input.name)}`, 303);
+      } catch (error) {
+        failure =
+          error instanceof GitHubError
+            ? `Non se puido gardar. ${error.message}`
+            : 'Non se puido gardar. Téntao de novo nuns minutos.';
+      }
+    }
+  }
+}
+
+const errorFor = (field: string) => errors.find((e) => e.field === field)?.message;
+// One empty row to fill in when there is nothing yet.
+const rows = input.pieces.length > 0 ? input.pieces : [emptyPiece()];
+
+function emptyPiece(): PieceInput {
+  return { id: '', title: '', description: '', alt: '', price: '', image: '' };
+}
+---
+
+<Admin title={isNew ? 'Novo artesán' : input.name} user={user}>
+  <p class="back"><a href="/admin/">&larr; Todos os artesáns</a></p>
+
+  <h1>{isNew ? 'Novo artesán' : input.name}</h1>
+
+  {failure && <p class="alert" role="alert">{failure}</p>}
+  {
+    errors.length > 0 && (
+      <p class="alert" role="alert">
+        Hai {errors.length === 1 ? 'un campo' : `${errors.length} campos`} que revisar. Están
+        marcados máis abaixo.
+      </p>
+    )
+  }
+
+  <form method="post" enctype="multipart/form-data" class="form">
+    <section class="group">
+      <h2>Quen é</h2>
+
+      <p class="field">
+        <label for="name">Nome e apelidos</label>
+        <input type="text" id="name" name="name" value={input.name} required />
+        {errorFor('name') && <span class="field__error">{errorFor('name')}</span>}
+      </p>
+
+      <p class="field">
+        <label for="workshop">Nome do obradoiro</label>
+        <input type="text" id="workshop" name="workshop" value={input.workshop} required />
+        {errorFor('workshop') && <span class="field__error">{errorFor('workshop')}</span>}
+      </p>
+
+      <p class="field">
+        <label for="craft">Oficio</label>
+        <select id="craft" name="craft" required>
+          <option value="">Escolle un oficio…</option>
+          {
+            CRAFTS.map((craft) => (
+              <option value={craft} selected={craft === input.craft}>
+                {t(`craft.${craft}`)}
+              </option>
+            ))
+          }
+        </select>
+        {errorFor('craft') && <span class="field__error">{errorFor('craft')}</span>}
+      </p>
+
+      <p class="field">
+        <label for="summary">Resumo curto</label>
+        <textarea id="summary" name="summary" rows="2" required>{input.summary}</textarea>
+        <span class="field__hint">
+          Unha ou dúas liñas, entre 20 e 200 caracteres. É o que se le na tarxeta e o que sae
+          en Google.
+        </span>
+        {errorFor('summary') && <span class="field__error">{errorFor('summary')}</span>}
+      </p>
+
+      <p class="field">
+        <label for="body">Texto longo</label>
+        <textarea id="body" name="body" rows="8">{input.body}</textarea>
+        <span class="field__hint">
+          Dous ou tres parágrafos: quen é, que fai e como traballa.
+          {!isNew && ' Se o deixas baleiro, bórrase o texto que había.'}
+        </span>
+      </p>
+    </section>
+
+    <section class="group">
+      <h2>Foto de perfil</h2>
+
+      {
+        input.photo && (
+          <p class="current">
+            Agora hai: <code>{input.photo}</code>. Sobe outra só se a queres cambiar.
+          </p>
+        )
+      }
+
+      <p class="field">
+        <label for="photoUpload">Imaxe</label>
+        <input type="file" id="photoUpload" name="photoUpload" accept="image/*" />
+        <input type="hidden" name="photo" value={input.photo} />
+        <span class="field__hint">Mellor vertical. Recórtase a 4:5. Máximo 8 MB.</span>
+        {errorFor('photoUpload') && <span class="field__error">{errorFor('photoUpload')}</span>}
+        {errorFor('upload') && <span class="field__error">{errorFor('upload')}</span>}
+      </p>
+
+      <p class="field">
+        <label for="photoAlt">Que se ve na foto</label>
+        <textarea id="photoAlt" name="photoAlt" rows="2" required>{input.photoAlt}</textarea>
+        <span class="field__hint">
+          Para quen non pode vela. Describe o que aparece; non repitas o nome.
+        </span>
+        {errorFor('photoAlt') && <span class="field__error">{errorFor('photoAlt')}</span>}
+      </p>
+    </section>
+
+    <section class="group">
+      <h2>Como contactar</h2>
+
+      <p class="field">
+        <label for="email">Correo</label>
+        <input type="email" id="email" name="email" value={input.email} required />
+        {errorFor('email') && <span class="field__error">{errorFor('email')}</span>}
+      </p>
+
+      <div class="two">
+        <p class="field">
+          <label for="phone">Teléfono</label>
+          <input type="tel" id="phone" name="phone" value={input.phone} placeholder="+34981000000" />
+          <span class="field__hint">Con prefixo e sen espazos.</span>
+          {errorFor('phone') && <span class="field__error">{errorFor('phone')}</span>}
+        </p>
+
+        <p class="field">
+          <label for="whatsapp">WhatsApp</label>
+          <input type="tel" id="whatsapp" name="whatsapp" value={input.whatsapp} placeholder="+34600000000" />
+          {errorFor('whatsapp') && <span class="field__error">{errorFor('whatsapp')}</span>}
+        </p>
+      </div>
+
+      <div class="two">
+        <p class="field">
+          <label for="website">Páxina web</label>
+          <input type="url" id="website" name="website" value={input.website} />
+          {errorFor('website') && <span class="field__error">{errorFor('website')}</span>}
+        </p>
+
+        <p class="field">
+          <label for="instagram">Instagram</label>
+          <input type="url" id="instagram" name="instagram" value={input.instagram} />
+          {errorFor('instagram') && <span class="field__error">{errorFor('instagram')}</span>}
+        </p>
+      </div>
+
+      <p class="field">
+        <label for="address">Enderezo do obradoiro</label>
+        <input type="text" id="address" name="address" value={input.address} required />
+        {errorFor('address') && <span class="field__error">{errorFor('address')}</span>}
+      </p>
+
+      <div class="two">
+        <p class="field">
+          <label for="directions">Como chegar</label>
+          <input type="text" id="directions" name="directions" value={input.directions} />
+        </p>
+
+        <p class="field">
+          <label for="mapUrl">Ligazón a un mapa</label>
+          <input type="url" id="mapUrl" name="mapUrl" value={input.mapUrl} />
+          {errorFor('mapUrl') && <span class="field__error">{errorFor('mapUrl')}</span>}
+        </p>
+      </div>
+
+      <div class="checks">
+        <label><input type="checkbox" name="commissions" checked={input.commissions} /> Acepta encargos</label>
+        <label><input type="checkbox" name="shipping" checked={input.shipping} /> Fai envíos</label>
+        <label><input type="checkbox" name="featured" checked={input.featured} /> Sae na portada</label>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2>Pezas</h2>
+      <p class="group__hint">
+        Polo menos unha. Cada peza leva unha foto cadrada, un título, unha descrición curta e un
+        prezo (ou nada, e porá «Consultar»).
+      </p>
+      {errorFor('pieces') && <p class="field__error">{errorFor('pieces')}</p>}
+
+      <div id="pieces">
+        {
+          rows.map((piece, i) => (
+            <fieldset class="piece" data-piece>
+              <legend>Peza {i + 1}</legend>
+
+              <p class="field">
+                <label for={`piece-${i}-title`}>Título</label>
+                <input type="text" id={`piece-${i}-title`} name={`piece-${i}-title`} value={piece.title} />
+                {errorFor(`pieces.${i}.title`) && <span class="field__error">{errorFor(`pieces.${i}.title`)}</span>}
+              </p>
+
+              {piece.image && <p class="current">Agora hai: <code>{piece.image}</code></p>}
+
+              <p class="field">
+                <label for={`piece-${i}-upload`}>Foto</label>
+                <input type="file" id={`piece-${i}-upload`} name={`piece-${i}-upload`} accept="image/*" />
+                <input type="hidden" name={`piece-${i}-image`} value={piece.image} />
+                {errorFor(`pieces.${i}.upload`) && <span class="field__error">{errorFor(`pieces.${i}.upload`)}</span>}
+              </p>
+
+              <p class="field">
+                <label for={`piece-${i}-alt`}>Que se ve na foto</label>
+                <textarea id={`piece-${i}-alt`} name={`piece-${i}-alt`} rows="2">{piece.alt}</textarea>
+                {errorFor(`pieces.${i}.alt`) && <span class="field__error">{errorFor(`pieces.${i}.alt`)}</span>}
+              </p>
+
+              <p class="field">
+                <label for={`piece-${i}-description`}>Descrición</label>
+                <textarea id={`piece-${i}-description`} name={`piece-${i}-description`} rows="3">{piece.description}</textarea>
+                {errorFor(`pieces.${i}.description`) && <span class="field__error">{errorFor(`pieces.${i}.description`)}</span>}
+              </p>
+
+              <div class="two">
+                <p class="field">
+                  <label for={`piece-${i}-price`}>Prezo en euros</label>
+                  <input type="text" inputmode="decimal" id={`piece-${i}-price`} name={`piece-${i}-price`} value={piece.price} />
+                  <span class="field__hint">Baleiro = «Consultar».</span>
+                  {errorFor(`pieces.${i}.price`) && <span class="field__error">{errorFor(`pieces.${i}.price`)}</span>}
+                </p>
+
+                <p class="field">
+                  <label for={`piece-${i}-id`}>Código</label>
+                  <input type="text" id={`piece-${i}-id`} name={`piece-${i}-id`} value={piece.id} placeholder="xerase só" />
+                  <span class="field__hint">Únese coas traducións. Non o cambies despois.</span>
+                  {errorFor(`pieces.${i}.id`) && <span class="field__error">{errorFor(`pieces.${i}.id`)}</span>}
+                </p>
+              </div>
+            </fieldset>
+          ))
+        }
+      </div>
+
+      <input type="hidden" name="pieceCount" id="pieceCount" value={rows.length} />
+      <p><button type="button" class="button button--ghost" id="addPiece" hidden>Engadir outra peza</button></p>
+    </section>
+
+    <input type="hidden" name="slug" value={input.slug} />
+
+    <div class="actions">
+      <button type="submit" class="button button--primary">
+        {isNew ? 'Crear artesán' : 'Gardar cambios'}
+      </button>
+      <a class="cancel" href="/admin/">Cancelar</a>
+    </div>
+
+    <p class="publish-note">
+      Ao gardar, o cambio tarda un par de minutos en verse na web.
+    </p>
+  </form>
+</Admin>
+
+<script>
+  // Adding a piece is the one thing the form cannot do on its own. Without
+  // JavaScript you still get every row that already exists plus an empty one,
+  // so nothing is unreachable - you just save twice to add two pieces.
+  const container = document.getElementById('pieces');
+  const counter = document.getElementById('pieceCount') as HTMLInputElement | null;
+  const button = document.getElementById('addPiece') as HTMLButtonElement | null;
+
+  if (container && counter && button) {
+    button.hidden = false;
+
+    button.addEventListener('click', () => {
+      const index = Number(counter.value);
+      const last = container.querySelector('[data-piece]:last-of-type');
+      if (!last) return;
+
+      const copy = last.cloneNode(true) as HTMLElement;
+
+      copy.querySelectorAll('legend').forEach((el) => (el.textContent = `Peza ${index + 1}`));
+      copy.querySelectorAll('.current, .field__error').forEach((el) => el.remove());
+
+      copy.querySelectorAll('input, textarea').forEach((el) => {
+        const field = el as HTMLInputElement | HTMLTextAreaElement;
+        const name = field.name.replace(/^piece-\d+-/, `piece-${index}-`);
+        field.name = name;
+        if (field.id) field.id = name;
+        if (field instanceof HTMLInputElement && field.type === 'file') field.value = '';
+        else field.value = '';
+      });
+
+      copy.querySelectorAll('label').forEach((label) => {
+        label.htmlFor = label.htmlFor.replace(/^piece-\d+-/, `piece-${index}-`);
+      });
+
+      container.append(copy);
+      counter.value = String(index + 1);
+      copy.querySelector('input')?.focus();
+    });
+  }
+</script>
+
+<style>
+  .back {
+    margin-block-end: var(--space-m);
+    font-size: var(--step--1);
+  }
+
+  .back a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  .back a:hover {
+    color: var(--color-buoy);
+  }
+
+  h1 {
+    font-size: var(--step-3);
+  }
+
+  .alert {
+    margin-block-start: var(--space-m);
+    padding: var(--space-s) var(--space-m);
+    border-inline-start: 3px solid var(--color-buoy);
+    background-color: rgb(184 67 26 / 0.08);
+    font-size: var(--step--1);
+  }
+
+  .form {
+    display: grid;
+    gap: var(--space-xl);
+    margin-block-start: var(--space-xl);
+  }
+
+  .group {
+    padding: var(--space-l);
+    background-color: var(--surface-raised);
+    border: var(--rule);
+    border-radius: var(--radius);
+  }
+
+  .group h2 {
+    font-size: var(--step-1);
+    padding-block-end: var(--space-s);
+    border-block-end: var(--rule);
+  }
+
+  .group__hint {
+    margin-block-start: var(--space-s);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+    line-height: var(--leading-body);
+  }
+
+  .field {
+    display: grid;
+    gap: var(--space-3xs);
+    margin-block-start: var(--space-m);
+  }
+
+  .two {
+    display: grid;
+    gap: var(--space-m);
+  }
+
+  @media (min-width: 40em) {
+    .two {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  label {
+    font-size: var(--step--1);
+    font-weight: var(--weight-medium);
+  }
+
+  input[type='text'],
+  input[type='email'],
+  input[type='tel'],
+  input[type='url'],
+  select,
+  textarea {
+    width: 100%;
+    padding: 0.55em 0.7em;
+    border: 1px solid var(--color-shell);
+    border-radius: var(--radius);
+    background-color: var(--surface-page);
+    font-size: var(--step-0);
+    font-family: inherit;
+    color: var(--text-body);
+  }
+
+  textarea {
+    resize: vertical;
+    line-height: var(--leading-body);
+  }
+
+  input:hover,
+  select:hover,
+  textarea:hover,
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--color-ink);
+  }
+
+  input[type='file'] {
+    font-size: var(--step--1);
+  }
+
+  .field__hint {
+    font-size: var(--step--2);
+    color: var(--text-muted);
+    line-height: var(--leading-snug);
+  }
+
+  .field__error {
+    font-size: var(--step--2);
+    font-weight: var(--weight-semibold);
+    color: var(--color-buoy-deep);
+  }
+
+  .current {
+    margin-block-start: var(--space-s);
+    font-size: var(--step--2);
+    color: var(--text-muted);
+  }
+
+  .current code {
+    background-color: var(--color-shell);
+    padding: 0.1em 0.35em;
+  }
+
+  .checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-m);
+    margin-block-start: var(--space-l);
+    font-size: var(--step--1);
+  }
+
+  .checks label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+  }
+
+  .piece {
+    margin-block-start: var(--space-m);
+    padding: var(--space-m);
+    border: var(--rule);
+    border-radius: var(--radius);
+  }
+
+  .piece legend {
+    padding-inline: var(--space-2xs);
+    font-size: var(--step--2);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-buoy);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-m);
+  }
+
+  .cancel {
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .publish-note {
+    font-size: var(--step--2);
+    color: var(--text-muted);
+  }
+</style>

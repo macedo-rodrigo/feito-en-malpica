@@ -7,7 +7,7 @@
  * itself half way through saving and leave the content truncated. Sveltia
  * warns about exactly this and asks to be served as a static file instead.
  *
- * Nothing here is needed in production: the host serves public/admin/ the
+ * Nothing here is needed in production: the host serves public/editor/ the
  * same way, and there is no file watcher to interrupt anything.
  *
  *   npm run admin
@@ -64,7 +64,7 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  const url = `http://localhost:${PORT}/admin/`;
+  const url = `http://localhost:${PORT}/editor/`;
   console.log(`\n  Editor en ${url}`);
   console.log('  Preme "Traballar cun repositorio local" e escolle a carpeta do proxecto.');
   console.log('  Ctrl+C para parar.\n');

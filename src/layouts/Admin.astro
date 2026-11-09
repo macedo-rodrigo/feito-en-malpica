@@ -1,0 +1,146 @@
+---
+/**
+ * The shell for the editor pages.
+ *
+ * Shares the public site's tokens and typography on purpose: whoever uses
+ * this should feel they are inside their own site, not in somebody else's
+ * tool. It is a separate layout from Base because it has no public
+ * navigation, no footer and no SEO.
+ */
+import '@/styles/global.css';
+import SealSprite from '@/components/SealSprite.astro';
+import Seal from '@/components/Seal.astro';
+
+interface Props {
+  title: string;
+  /** Hidden on the sign-in page, where there is nobody to sign out. */
+  user?: string | null;
+}
+
+const { title, user = null } = Astro.props;
+---
+
+<!doctype html>
+<html lang="gl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title} — Editor de Feito en Malpica</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/fraunces-latin-variable.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/public-sans-latin-variable.woff2" as="font" type="font/woff2" crossorigin />
+  </head>
+
+  <body>
+    <SealSprite />
+
+    <header class="admin-header">
+      <div class="admin-shell admin-header__inner">
+        <a class="admin-brand" href="/admin/">
+          <Seal variant="compact" size="2.5rem" />
+          <span>
+            <strong>Feito en Malpica</strong>
+            <span class="admin-brand__role">Editor</span>
+          </span>
+        </a>
+
+        {
+          user && (
+            <div class="admin-session">
+              <span class="admin-session__who">{user}</span>
+              <a class="admin-session__out" href="/" target="_blank" rel="noopener">Ver a web</a>
+              <form method="post" action="/admin/sair">
+                <button type="submit" class="admin-session__out">Saír</button>
+              </form>
+            </div>
+          )
+        }
+      </div>
+    </header>
+
+    <main class="admin-shell admin-main">
+      <slot />
+    </main>
+
+    <style>
+      body {
+        background-color: var(--surface-page);
+      }
+
+      .admin-shell {
+        width: min(100% - 2rem, 64rem);
+        margin-inline: auto;
+      }
+
+      .admin-header {
+        border-block-end: var(--rule);
+        background-color: var(--surface-raised);
+      }
+
+      .admin-header__inner {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-s);
+        min-height: 4.5rem;
+      }
+
+      .admin-brand {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2xs);
+        text-decoration: none;
+        /* Cancels the seal's clear space against the container edge. */
+        margin-inline-start: -0.5rem;
+      }
+
+      .admin-brand strong {
+        display: block;
+        font-family: var(--font-display);
+        font-size: var(--step-0);
+        font-weight: var(--weight-display);
+      }
+
+      .admin-brand__role {
+        display: block;
+        font-size: var(--step--2);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--color-buoy);
+      }
+
+      .admin-session {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-s);
+        font-size: var(--step--1);
+      }
+
+      .admin-session__who {
+        color: var(--text-muted);
+      }
+
+      .admin-session__out {
+        padding: 0;
+        font: inherit;
+        color: var(--color-buoy);
+        text-decoration-line: underline;
+        text-underline-offset: 0.18em;
+        background: none;
+        border: 0;
+        cursor: pointer;
+      }
+
+      .admin-session__out:hover {
+        color: var(--color-buoy-deep);
+      }
+
+      .admin-main {
+        padding-block: var(--space-2xl) var(--space-3xl);
+      }
+    </style>
+  </body>
+</html>

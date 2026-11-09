@@ -45,11 +45,11 @@ npm run admin:password -- correo@ejemplo.com "la contraseña que elijas"
 ```
 
 Imprime una línea con el correo y la contraseña cifrada. Todas juntas van en
-`ADMIN_USERS`, una debajo de otra:
+`ADMIN_USERS`, **separadas por punto y coma y en una sola línea**, para que
+se puedan pegar también en el panel web de Netlify sin que se rompan:
 
 ```
-ADMIN_USERS="rodrigo@ejemplo.com a1b2c3:d4e5f6...
-dario@ejemplo.com 9z8y7x:6w5v4u..."
+ADMIN_USERS="rodrigo@ejemplo.com a1b2c3:d4e5f6...;dario@ejemplo.com 9z8y7x:6w5v4u..."
 ```
 
 Cada quien tiene **su propia contraseña**: no hay que compartir ninguna, y si

@@ -169,9 +169,11 @@ export function readAdminConfig(env: Record<string, string | undefined>): AdminC
   if (!sessionSecret || sessionSecret.length < 32) return null;
 
   const users = (env.ADMIN_USERS ?? '')
-    // Split on newlines only; trimming each line takes care of carriage
-    // returns, which a value pasted from Windows will carry.
-    .split('\n')
+    // Accounts are separated by a semicolon or a newline. Semicolons keep
+    // the whole value on one line, which survives being pasted into a web
+    // form or imported from a .env; multi-line values do not always.
+    // Trimming each entry takes care of the carriage returns Windows adds.
+    .split(/[;\n]/)
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
@@ -179,7 +181,10 @@ export function readAdminConfig(env: Record<string, string | undefined>): AdminC
       if (separator < 0) return null;
       const email = line.slice(0, separator).trim().toLowerCase();
       const passwordHash = line.slice(separator).trim();
-      return email.includes('@') && passwordHash.includes(':')
+      // The hash has to actually look like one. Otherwise the placeholder
+      // line in .env.example parses as a real account, and signing in just
+      // fails forever with no hint as to why.
+      return email.includes('@') && /^[0-9a-f]{16,}:[0-9a-f]{32,}$/i.test(passwordHash)
         ? { email, passwordHash }
         : null;
     })

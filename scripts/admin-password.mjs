@@ -13,10 +13,9 @@
  */
 import { randomBytes, scrypt } from 'node:crypto';
 import { promisify } from 'node:util';
-import { createInterface } from 'node:readline';
 import { readFile, writeFile } from 'node:fs/promises';
-import { stdin, stdout } from 'node:process';
 import { parseEnv, setEnvValue } from './lib/dotenv.mjs';
+import { askSecret } from './lib/prompt.mjs';
 
 const scryptAsync = promisify(scrypt);
 const SCRYPT = { N: 16384, r: 8, p: 1, keylen: 64 };
@@ -28,52 +27,13 @@ function fail(message) {
   process.exit(1);
 }
 
-/**
- * Two separate paths on purpose. On a terminal, readline asks and the echo
- * is suppressed. Piped, readline answers the first question and then never
- * settles the second, so the input is read in one go instead; that path
- * exists so this can be tested without a terminal.
- */
-async function reader() {
-  if (!stdin.isTTY) {
-    const chunks = [];
-    for await (const chunk of stdin) chunks.push(chunk);
-    const lines = Buffer.concat(chunks).toString().split('\n');
-    const ask = (question) => {
-      stdout.write(question + '\n');
-      return Promise.resolve(lines.shift() ?? '');
-    };
-    ask.close = () => {};
-    return ask;
-  }
-
-  const rl = createInterface({ input: stdin, output: stdout, terminal: true });
-  const ask = (question) =>
-    new Promise((resolve) => {
-      let shown = false;
-      rl._writeToOutput = (text) => {
-        if (!shown && text.includes(question)) {
-          stdout.write(question);
-          shown = true;
-        }
-      };
-      rl.question(question, (answer) => {
-        stdout.write('\n');
-        resolve(answer);
-      });
-    });
-  ask.close = () => rl.close();
-  return ask;
-}
-
 const args = process.argv.slice(2);
 const printOnly = args.includes('--print');
 const email = (args.find((a) => !a.startsWith('--')) ?? '').trim().toLowerCase();
 
 if (!email || !email.includes('@')) fail('Falta o correo, ou non parece un correo.');
 
-const ask = await reader();
-const password = (await ask('  Contrasinal (non se ve mentres escribes): ')).trim();
+const password = (await askSecret('  Contrasinal (vense asteriscos): ')).trim();
 
 if (!password) fail('Non escribiches nada.');
 if (password.length < 16) {
@@ -86,9 +46,13 @@ if (password.length < 16) {
   );
 }
 
-const confirmation = (await ask('  Repíteo: ')).trim();
-if (confirmation !== password) fail('Non coinciden.');
-ask.close();
+const confirmation = (await askSecret('  Repíteo: ')).trim();
+if (confirmation !== password) {
+  fail(
+    `Non coinciden: ${password.length} caracteres a primeira vez, ` +
+      `${confirmation.length} a segunda.`,
+  );
+}
 
 const salt = randomBytes(16).toString('hex');
 const derived = await scryptAsync(password, salt, SCRYPT.keylen, SCRYPT);

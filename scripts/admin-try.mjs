@@ -10,9 +10,9 @@
  */
 import { scrypt, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
-import { createInterface } from 'node:readline';
+import { askSecret } from './lib/prompt.mjs';
 import { readFile } from 'node:fs/promises';
-import { stdin, stdout } from 'node:process';
+
 import { parseEnv } from './lib/dotenv.mjs';
 
 const scryptAsync = promisify(scrypt);
@@ -49,30 +49,8 @@ if (!line) {
 const stored = line.slice(line.search(/\s/)).trim();
 const [salt, expectedHex] = stored.split(':');
 
-async function ask(question) {
-  if (!stdin.isTTY) {
-    const chunks = [];
-    for await (const chunk of stdin) chunks.push(chunk);
-    return Buffer.concat(chunks).toString().split('\n')[0] ?? '';
-  }
-  const rl = createInterface({ input: stdin, output: stdout, terminal: true });
-  return new Promise((resolve) => {
-    let shown = false;
-    rl._writeToOutput = (text) => {
-      if (!shown && text.includes(question)) {
-        stdout.write(question);
-        shown = true;
-      }
-    };
-    rl.question(question, (answer) => {
-      stdout.write('\n');
-      rl.close();
-      resolve(answer);
-    });
-  });
-}
-
-const password = (await ask('  Contrasinal a probar (non se ve): ')).trim();
+const password = (await askSecret('  Contrasinal a probar (vense asteriscos): ')).trim();
+console.log(`  (lin ${password.length} caracteres)`);
 const expected = Buffer.from(expectedHex, 'hex');
 const derived = await scryptAsync(password, salt, expected.length, SCRYPT);
 const matches = derived.length === expected.length && timingSafeEqual(derived, expected);

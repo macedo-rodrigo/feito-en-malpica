@@ -31,15 +31,28 @@ export function checkSetup(env: Record<string, string | undefined>): Setup {
  * may run every request in a different process.
  */
 export function currentUser(context: APIContext | AstroGlobal): string | null {
-  const env = import.meta.env as unknown as Record<string, string | undefined>;
-  const config = readAdminConfig({ ...process.env, ...env });
+  const config = readAdminConfig(env());
   if (!config) return null;
   return readSession(context.cookies.get(SESSION_COOKIE)?.value, config.sessionSecret);
 }
 
-/** The environment, wherever the host happens to put it. */
+/**
+ * The environment, wherever the host happens to put it.
+ *
+ * Both sources are needed: `astro dev` loads .env into import.meta.env and
+ * not into process.env, while a deployed function gets the variables the
+ * other way round.
+ *
+ * Runtime wins. import.meta.env is frozen when the site is built, so a
+ * variable changed in the host's dashboard - rotating the GitHub token when
+ * it expires, say - would otherwise keep using the stale baked-in value
+ * until somebody happened to rebuild.
+ */
 export function env(): Record<string, string | undefined> {
-  return { ...process.env, ...(import.meta.env as unknown as Record<string, string | undefined>) };
+  return {
+    ...(import.meta.env as unknown as Record<string, string | undefined>),
+    ...process.env,
+  };
 }
 
 export function adminConfig() {

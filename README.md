@@ -35,20 +35,24 @@ npm run brand:trace           # revectoriza o logo desde brand/source/
 npm run fonts:sync            # copia as tipografías a public/fonts/
 npm run images:placeholders   # xera imaxes de exemplo que falten
 npm run shots                 # capturas de dist/ para revisar o deseño
-npm run admin                 # editor local, nun servidor estático aparte
+npm run admin                 # /editor local, nun servidor estático aparte
+npm run admin:password        # xera o contrasinal e o segredo do panel
 ```
 
 ---
 
-## Dúas maneiras de engadir contido
+## Tres maneiras de engadir contido
 
-**Co editor** (`/admin`), que é unha web con formularios: enche os campos,
-sube as fotos e garda. Non fai falla saber nada de código nin instalar nada.
-A posta en marcha está en [docs/ADMIN.md](docs/ADMIN.md); para probalo contra
-os ficheiros deste ordenador, `npm run admin`.
+**Desde o panel** (`/admin`): entra cun correo e un contrasinal e enche un
+formulario coas pantallas do propio sitio. É o camiño para quen non é
+técnico. Posta en marcha en [docs/ADMIN.md](docs/ADMIN.md).
+
+**Desde `/editor`**: o editor Sveltia, que entra con GitHub e chega a todo
+— traducións, textos das páxinas e borrado. `npm run admin` ábreo contra os
+ficheiros deste ordenador, sen login.
 
 **A man**, editando os ficheiros de texto. É o que se describe aquí abaixo, e
-serve tamén para entender que garda o editor en cada campo.
+serve tamén para entender que garda cada campo.
 
 ---
 

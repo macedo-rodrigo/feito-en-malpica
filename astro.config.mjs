@@ -19,7 +19,15 @@ export default defineConfig({
    * need a server to check a password and write to GitHub. Every public page
    * is still built once, up front, and served as a file.
    */
-  adapter: netlify(),
+  adapter: netlify({
+    /**
+     * The site uses none of Netlify's edge features, and emulating them
+     * locally starts a Deno process that fails on this machine and covers
+     * the page with an error overlay. Environment variables are the only
+     * part we actually want in development.
+     */
+    devFeatures: { environmentVariables: true, images: false, edgeFunctions: false },
+  }),
   // Directory URLs everywhere, in dev and in the built output, so links and
   // end-to-end tests never disagree about a trailing slash.
   trailingSlash: 'always',

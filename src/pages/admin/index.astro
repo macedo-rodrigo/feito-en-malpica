@@ -9,7 +9,6 @@
  */
 export const prerender = false;
 
-import { Image } from 'astro:assets';
 import Admin from '@/layouts/Admin.astro';
 import { currentUser, checkSetup, env } from '@/lib/admin-guard';
 import { getArtisans } from '@/lib/artisans';
@@ -52,11 +51,11 @@ const saved = Astro.url.searchParams.get('gardado');
       artisans.map((artisan) => (
         <li class="row">
           <div class="row__photo">
-            <Image
-              src={artisan.photo.src}
+            <img
+              src={artisan.photo.src.src}
               alt=""
-              width={96}
-              height={120}
+              width={artisan.photo.src.width}
+              height={artisan.photo.src.height}
               loading="lazy"
               decoding="async"
             />

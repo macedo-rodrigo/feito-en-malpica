@@ -1,5 +1,10 @@
-import { randomBytes, scrypt, timingSafeEqual, createHmac } from 'node:crypto';
-import { promisify } from 'node:util';
+import {
+  randomBytes,
+  scrypt,
+  timingSafeEqual,
+  createHmac,
+  type ScryptOptions,
+} from 'node:crypto';
 
 /**
  * The login for /admin.
@@ -12,10 +17,25 @@ import { promisify } from 'node:util';
  * calling the platform's is not, and it keeps the dependency count at zero.
  */
 
-const scryptAsync = promisify(scrypt);
-
 /** Deliberately slow, so guessing a password is expensive. */
 const SCRYPT = { N: 16384, r: 8, p: 1, keylen: 64 } as const;
+
+/**
+ * Written out rather than wrapped with promisify: promisify only picks up
+ * one of scrypt's overloads, and it is not the one that takes options.
+ */
+function scryptAsync(
+  password: string,
+  salt: string,
+  keylen: number,
+  options: ScryptOptions,
+): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    scrypt(password, salt, keylen, options, (error, derived) =>
+      error ? reject(error) : resolve(derived),
+    );
+  });
+}
 
 /** How long a session lasts before the editor has to sign in again. */
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 12;
@@ -30,7 +50,7 @@ export const SESSION_COOKIE = 'fem_session';
  */
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString('hex');
-  const derived = (await scryptAsync(password, salt, SCRYPT.keylen, SCRYPT)) as Buffer;
+  const derived = await scryptAsync(password, salt, SCRYPT.keylen, SCRYPT);
   return `${salt}:${derived.toString('hex')}`;
 }
 
@@ -51,7 +71,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
     return false;
   }
 
-  const derived = (await scryptAsync(password, salt, expected.length, SCRYPT)) as Buffer;
+  const derived = await scryptAsync(password, salt, expected.length, SCRYPT);
   return derived.length === expected.length && timingSafeEqual(derived, expected);
 }
 

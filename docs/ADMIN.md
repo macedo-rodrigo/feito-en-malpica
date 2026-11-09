@@ -1,142 +1,155 @@
-# O editor (`/admin`)
+# O panel de administración
 
-Un panel para dar de alta artesáns e cambiar os textos das páxinas sen tocar
-código nin abrir o proxecto.
+Unha zona privada en `/admin` para dar de alta artesáns e cambiar os textos,
+coas pantallas do propio sitio. Quen edita entra cun correo e un contrasinal;
+non fai falla ter conta de GitHub nin saber nada de código.
 
-## Como funciona, en dúas liñas
+## Como funciona
 
-Non hai base de datos nin servidor. Cando se garda no editor, **faise un
-cambio no repositorio de GitHub**, e o servidor reconstrúe o sitio a partir
-del. Pasa un ou dous minutos entre darlle a gardar e velo publicado.
+Non hai base de datos. Ao gardar, o panel escribe un cambio no repositorio de
+GitHub e o servidor reconstrúe o sitio a partir del. **O cambio tarda un ou
+dous minutos en verse publicado**, e o panel avísao ao gardar.
 
-Iso ten dúas consecuencias que convén saber de antemán:
-
-- **Quen edite precisa unha conta de GitHub con acceso ao repositorio.** Ese é
-  o control de acceso, e é o que fai que todo isto saia de balde.
-- **Non é instantáneo.** Gárdase, e ao cabo dun par de minutos vese na web.
-
-A interface do editor sae **no idioma do navegador**. Quen navegue en castelán
-veraa en castelán. Non hai tradución ao galego río arriba, así que eses
-navegadores veránaa en inglés; pódese cambiar a man dentro do editor, en
-*Settings*.
+As páxinas públicas seguen sendo ficheiros estáticos, igual de rápidas. Só as
+catro pantallas de `/admin` precisan servidor, e Netlify cóbreas no plan
+gratuíto.
 
 ---
 
-## Probalo agora mesmo, sen configurar nada
+## Poñelo en marcha
+
+Fan falla cinco variables no servidor. En Netlify están en
+**Site configuration → Environment variables**.
+
+### 1. O contrasinal
+
+```bash
+npm run admin:password -- "o-contrasinal-que-escollas"
+```
+
+Imprime dúas das variables, xa listas para pegar:
+
+| Variable | Que é |
+| --- | --- |
+| `ADMIN_PASSWORD_HASH` | O contrasinal cifrado. O contrasinal en claro non se garda en ningures. |
+| `SESSION_SECRET` | Co que se asinan as sesións. Se se cambia, péchanse todas. |
+
+### 2. O correo
+
+| Variable | Exemplo |
+| --- | --- |
+| `ADMIN_EMAIL` | `nadia@exemplo.gal` |
+
+É o correo co que se entra. Non se lle manda nada.
+
+### 3. O acceso ao repositorio
+
+O panel precisa permiso para escribir no repositorio. Faise cun token:
+
+1. En GitHub: *Settings → Developer settings → Personal access tokens →
+   Fine-grained tokens → Generate new token*.
+2. **Repository access**: só este repositorio.
+3. **Permissions → Contents: Read and write**. Nada máis.
+4. Ponlle unha caducidade e apúntaa nalgures: cando venza, o panel deixa de
+   gardar e hai que xerar outro.
+
+| Variable | Valor |
+| --- | --- |
+| `GITHUB_TOKEN` | O token que acabas de xerar |
+| `GITHUB_REPO` | `macedo-rodrigo/feito-en-malpica` |
+| `GITHUB_BRANCH` | Opcional. Por defecto `main`. |
+
+Este token é a chave do repositorio: quen o teña pode cambiar o sitio. Vive só
+nas variables do servidor e nunca chega ao navegador.
+
+### 4. Probar
+
+Entra en `/admin`. Se falta algo, a páxina de entrada dirá **que** variable
+falta en vez de dar un erro.
+
+---
+
+## Probalo nesta máquina
+
+Crea un ficheiro `.env` na raíz (está ignorado por git):
+
+```
+ADMIN_EMAIL=probas@exemplo.gal
+ADMIN_PASSWORD_HASH=...        # de npm run admin:password
+SESSION_SECRET=...             # de npm run admin:password
+GITHUB_REPO=macedo-rodrigo/feito-en-malpica
+GITHUB_TOKEN=...               # un token de verdade, se queres probar a gardar
+```
+
+```bash
+npm run dev
+```
+
+E abre `http://localhost:4321/admin/`. Todo funciona igual, agás que **gardar
+escribe no repositorio de verdade**: se non queres iso, non poñas un token
+válido e quedarás na pantalla de erro ao gardar.
+
+---
+
+## Que pode facer quen entra
+
+| Pantalla | Que fai |
+| --- | --- |
+| **Panel** | A lista de artesáns, con botón para engadir outro. |
+| **Ficha** | Nome, obradoiro, oficio, resumo, texto longo, foto de perfil, contacto, enderezo e as pezas con foto e prezo. |
+
+As fotos súbense desde o formulario e gárdanse na carpeta do artesán. Déixao
+baleiro no prezo e na web porá «Consultar».
+
+### O que non se pode facer desde o panel
+
+- **Borrar un artesán.** A propósito: é irreversible desde a web e fácil de
+  premer sen querer. Dise e bórrase a man.
+- **Traducir ao castelán ou ao inglés.** O que non estea traducido vese en
+  galego, que é o comportamento previsto. As traducións fanse desde `/editor`
+  ou a man.
+- **Cambiar os textos das páxinas** (portada, «O proxecto», «Únete»). Tamén
+  desde `/editor`.
+- **Engadir un oficio novo** á lista. Iso toca código.
+
+## `/editor`, a porta de atrás
+
+En `/editor` segue estando o editor anterior (Sveltia), que entra con GitHub
+e chega a todo: traducións, textos das páxinas e borrado. É a rede de
+seguridade para quen si é técnico. Para usalo nesta máquina sen login:
 
 ```bash
 npm run admin
 ```
 
-Ábrese `http://localhost:4322/admin/`. Preme en **«Traballar cun repositorio
-local»** e escolle a carpeta do proxecto cando o pida. Non hai login: edita os
-ficheiros deste ordenador directamente. É a mellor maneira de ver como queda o
-panel antes de darllo a ninguén.
+---
 
-Os cambios quedan no teu disco como calquera outra edición: despois hai que
-facer `git commit` e `git push` como sempre.
+## Seguridade: o que hai e o que non
 
-### Por que non `npm run dev`
+**O que hai.** O contrasinal gárdase cifrado con scrypt, nunca en claro. As
+sesións van nunha cookie asinada que o navegador non pode ler nin modificar,
+e caducan ás doce horas. Un intento fallido tarda medio segundo a propósito,
+para que non se poida probar unha lista de contrasinais a toda velocidade. A
+resposta é a mesma tanto se falla o correo coma o contrasinal, para non dicir
+cal das dúas metades acertaron.
 
-O editor **non se abre co servidor de desenvolvemento**, e é a propósito. Ese
-servidor recarga a páxina cada vez que cambia un ficheiro; como o editor
-escribe ficheiros, pode recargarse a si mesmo a medio gardar e deixar o
-contido truncado. O propio Sveltia avisa diso.
+**O que non hai.** Unha soa conta compartida: non se sabe quen fixo cada
+cambio. Non hai bloqueo tras varios intentos fallidos — o servidor atende
+cada petición nun proceso distinto e non hai onde levar a conta sen engadir
+unha base de datos. A defensa é un contrasinal longo.
 
-Por iso `npm run admin` usa un servidor estático aparte
-(`scripts/serve-admin.mjs`), sen vixilancia de ficheiros. En produción non
-fai falla nada disto: o servidor do sitio serve `public/admin/` igual e non
-hai nada que recargue a páxina soa.
-
-Como consecuencia, `http://localhost:4321/admin/` (o porto do `npm run dev`)
-dá un 404. Non está roto: é que o editor non se serve por aí.
+**Se se filtra o contrasinal**: xera outro con `npm run admin:password`,
+cambia as dúas variables no servidor e volve despregar. Cambiar o
+`SESSION_SECRET` pecha ademais todas as sesións abertas.
 
 ---
 
-## Poñelo en marcha para que entre outra xente
+## Pendente de probar
 
-Para que alguén poida editar desde a súa casa fai falla que GitHub o deixe
-entrar. Hai dous camiños.
+Todo o camiño está verificado agás un paso: **gardar contra GitHub de
+verdade** nunca se executou cun token real. O resto si: o login, a lista, o
+formulario, as validacións, e que o ficheiro que xera o formulario constrúe
+páxinas correctas nos tres idiomas.
 
-### Camiño curto: token persoal
-
-Serve para probar hoxe mesmo, sen desplegar nada.
-
-1. En GitHub: *Settings → Developer settings → Personal access tokens →
-   Fine-grained tokens → Generate new token*.
-2. Dálle acceso **só a este repositorio**, con permiso de **Contents:
-   Read and write**.
-3. En `/admin`, preme **«Entrar usando token de acceso»** e pégao.
-
-Rápido, pero cada persoa ten que crear o seu token e gardalo nun sitio seguro.
-Para alguén que non é técnico é un paso incómodo.
-
-### Camiño recomendado: entrar con GitHub
-
-Un botón de «Entrar con GitHub» e xa está. Fai falla montar unha vez un
-servizo de login, que é gratuíto. Lévase uns dez minutos.
-
-1. **Crear unha aplicación OAuth en GitHub.**
-   *Settings → Developer settings → OAuth Apps → New OAuth App*.
-   - *Application name*: `Feito en Malpica — editor`
-   - *Homepage URL*: o enderezo do sitio
-   - *Authorization callback URL*: `https://<o-teu-worker>.workers.dev/callback`
-     (aínda non existe; vólvese aquí a corrixilo no paso 3)
-
-   Garda o **Client ID** e xera un **Client Secret**.
-
-2. **Desplegar o servizo de login** en Cloudflare Workers, que ten plan
-   gratuíto. O proxecto é
-   [`sveltia/sveltia-cms-auth`](https://github.com/sveltia/sveltia-cms-auth)
-   e o seu README leva un botón de *Deploy to Cloudflare*.
-
-   Configúranse tres variables no worker:
-   - `GITHUB_CLIENT_ID` e `GITHUB_CLIENT_SECRET`, os do paso 1
-   - `ALLOWED_DOMAINS`, co dominio do sitio
-
-3. **Volver á aplicación OAuth** e poñer o enderezo real do worker no
-   *callback URL*.
-
-4. **Apuntar o editor ao worker.** En `public/admin/config.yml`:
-
-   ```yaml
-   backend:
-     name: github
-     repo: macedo-rodrigo/feito-en-malpica
-     branch: main
-     base_url: https://o-teu-worker.workers.dev
-   ```
-
-5. **Dar acceso á xente**: en GitHub, *Settings → Collaborators* do
-   repositorio, convidalos con permiso de escritura.
-
----
-
-## O que pode facer quen edita
-
-| Sección | Que é |
-| --- | --- |
-| **Artesáns** | Dar de alta, cambiar ou borrar fichas. É o principal. |
-| **Traducións ao castelán / inglés** | Só o texto. Os datos de contacto, as fotos e os prezos saen sempre da ficha en galego. |
-| **Páxinas** | Os textos da portada, do listado, de «O proxecto» e de «Únete», nos tres idiomas. |
-
-As fotos súbense desde o propio editor e gárdanse na carpeta do artesán.
-
-## O que non pode facer
-
-- **Engadir un oficio novo** á lista (cerámica, redes, cestaría…). Iso toca
-  `src/content.config.ts` e mais os tres ficheiros de `src/i18n/`.
-- **Cambiar o deseño**, o menú ou a estrutura das páxinas.
-- **Saltarse as validacións.** O editor avisa en cada campo, pero a
-  comprobación de verdade está no sitio: se algo obrigatorio falta, a
-  publicación falla e o sitio queda como estaba. Non se rompe nada; queda
-  sen actualizar ata arranxalo.
-
-## Dúas cousas que convén lembrar
-
-**Os comentarios pérdense.** Os ficheiros editados desde o panel reescríbense
-enteiros, así que os comentarios que haxa no texto do ficheiro (coma o aviso
-de «FICHA INCOMPLETA» de Nadia3D) desaparecen no primeiro gardado.
-
-**O código da peza non se cambia nunca.** É o que une cada peza coa súa
-tradución. Se se cambia, a tradución desa peza déixase de ver.
+A primeira vez que se garde desde o panel convén mirar o repositorio e
+comprobar que apareceu o commit coa ficha e as fotos.

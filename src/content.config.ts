@@ -1,4 +1,5 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection } from 'astro:content';
+import { z } from 'zod';
 import { glob } from 'astro/loaders';
 
 /**
@@ -35,7 +36,7 @@ export const SOCIAL_NETWORKS = [
  * as a missing key. Left alone that fails every url(), email() and regex we
  * have, so treat blank as absent before validating.
  */
-const blank = <T extends z.ZodTypeAny>(schema: T) =>
+const blank = <T extends z.ZodType>(schema: T) =>
   z.preprocess((value) => (value === '' ? undefined : value), schema);
 
 /**
@@ -88,19 +89,19 @@ const artisans = defineCollection({
         location: z.object({
           address: z.string().min(5),
           directions: blank(z.string().optional()),
-          mapUrl: blank(z.string().url().optional()),
+          mapUrl: blank(z.url().optional()),
         }),
         contact: z.object({
           phone: blank(e164.optional()),
           whatsapp: blank(e164.optional()),
-          email: blank(z.string().email().optional()),
-          website: blank(z.string().url().optional()),
+          email: blank(z.email().optional()),
+          website: blank(z.url().optional()),
         }),
         social: z
           .array(
             z.object({
               network: z.enum(SOCIAL_NETWORKS),
-              url: z.string().url(),
+              url: z.url(),
               handle: blank(z.string().optional()),
             }),
           )

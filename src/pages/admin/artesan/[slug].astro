@@ -18,7 +18,6 @@ import { CRAFTS } from '../../../content.config';
 import { useTranslations } from '@/i18n/ui';
 import { commitFiles, GitHubError } from '@/lib/github';
 import {
-  MAX_UPLOAD_BYTES,
   safeFileName,
   slugify,
   toMarkdown,
@@ -64,7 +63,9 @@ function fromExisting(): ArtisanInput {
     shipping: existing?.shipping ?? false,
     featured: existing?.featured ?? false,
     order: String(existing?.order ?? 99),
-    body: '',
+    // The raw Markdown under the frontmatter. Without this the field would
+    // load empty and saving would quietly delete whatever was written.
+    body: existing?.body.body ?? '',
     pieces:
       existing?.pieces.map((piece) => ({
         id: piece.id,
@@ -273,7 +274,6 @@ function emptyPiece(): PieceInput {
         <textarea id="body" name="body" rows="8">{input.body}</textarea>
         <span class="field__hint">
           Dous ou tres parágrafos: quen é, que fai e como traballa.
-          {!isNew && ' Se o deixas baleiro, bórrase o texto que había.'}
         </span>
       </p>
     </section>

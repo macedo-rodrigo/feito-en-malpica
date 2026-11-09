@@ -16,7 +16,8 @@
     "shots": "node scripts/shoot.mjs",
     "admin": "node scripts/serve-admin.mjs",
     "admin:password": "node scripts/admin-password.mjs",
-    "admin:check": "node scripts/admin-check.mjs"
+    "admin:check": "node scripts/admin-check.mjs",
+    "admin:try": "node scripts/admin-try.mjs"
   },
   "engines": {
     "node": ">=22.12.0"

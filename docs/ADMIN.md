@@ -19,29 +19,51 @@ plan gratuito.
 
 ## Ponerlo en marcha
 
-Hacen falta cinco variables en el servidor. En Netlify están en
-**Site configuration → Environment variables**.
+Hacen falta cuatro variables en el servidor. Hay dos maneras de ponerlas.
 
-### 1. La contraseña
+### La rápida: rellenar un fichero y subirlo de una vez
 
 ```bash
-npm run admin:password -- "la-contraseña-que-elijas"
+cp .env.example .env          # y lo rellenas
+npx netlify env:import .env   # las sube todas a Netlify
 ```
 
-Imprime dos de las variables, ya listas para pegar:
+**El `.env` no se sube nunca al repositorio** y está ignorado por git a
+propósito: lleva dentro el token de GitHub, que es la llave de escritura, y
+este repositorio es público. El comando de arriba las manda a Netlify
+directamente desde tu ordenador, sin pasar por GitHub.
+
+Si prefieres hacerlo a mano, en Netlify están en
+**Site configuration → Environment variables**.
+
+### 1. Las cuentas
+
+Una línea por persona. Genera cada una con:
+
+```bash
+npm run admin:password -- correo@ejemplo.com "la contraseña que elijas"
+```
+
+Imprime una línea con el correo y la contraseña cifrada. Todas juntas van en
+`ADMIN_USERS`, una debajo de otra:
+
+```
+ADMIN_USERS="rodrigo@ejemplo.com a1b2c3:d4e5f6...
+dario@ejemplo.com 9z8y7x:6w5v4u..."
+```
+
+Cada quien tiene **su propia contraseña**: no hay que compartir ninguna, y si
+alguien deja el proyecto se borra su línea sin tocar la de los demás. Además,
+el commit que genera cada guardado dice quién lo hizo.
+
+La contraseña en claro no se guarda en ningún sitio. Si se pierde, se genera
+otra línea y se sustituye.
+
+### 2. El secreto de las sesiones
 
 | Variable | Qué es |
 | --- | --- |
-| `ADMIN_PASSWORD_HASH` | La contraseña cifrada. La contraseña en claro no se guarda en ningún sitio. |
-| `SESSION_SECRET` | Con lo que se firman las sesiones. Si se cambia, se cierran todas. |
-
-### 2. El correo
-
-| Variable | Ejemplo |
-| --- | --- |
-| `ADMIN_EMAIL` | `nadia@ejemplo.gal` |
-
-Es el correo con el que se entra. No se le manda nada.
+| `SESSION_SECRET` | Con lo que se firman las sesiones. Lo imprime el mismo comando. Cambiarlo cierra todas las sesiones abiertas. |
 
 ### 3. El acceso al repositorio
 
@@ -73,14 +95,10 @@ falta en vez de dar un error.
 
 ## Probarlo en esta máquina
 
-Crea un fichero `.env` en la raíz (está ignorado por git):
+Copia la plantilla y rellénala:
 
-```
-ADMIN_EMAIL=pruebas@ejemplo.gal
-ADMIN_PASSWORD_HASH=...        # de npm run admin:password
-SESSION_SECRET=...             # de npm run admin:password
-GITHUB_REPO=macedo-rodrigo/feito-en-malpica
-GITHUB_TOKEN=...               # un token de verdad, si quieres probar a guardar
+```bash
+cp .env.example .env
 ```
 
 ```bash
@@ -135,14 +153,19 @@ a propósito, para que no se pueda probar una lista de contraseñas a toda
 velocidad. La respuesta es la misma tanto si falla el correo como la
 contraseña, para no decir cuál de las dos mitades acertaron.
 
-**Lo que no hay.** Una sola cuenta compartida: no se sabe quién hizo cada
-cambio. No hay bloqueo tras varios intentos fallidos — el servidor atiende
+Un correo que no existe tarda lo mismo en ser rechazado que uno que sí,
+porque se verifica igualmente contra un hash señuelo. Sin eso, el login
+estaría diciendo qué cuentas existen.
+
+**Lo que no hay.** Bloqueo tras varios intentos fallidos: el servidor atiende
 cada petición en un proceso distinto y no hay dónde llevar la cuenta sin
 añadir una base de datos. La defensa es una contraseña larga.
 
-**Si se filtra la contraseña**: genera otra con `npm run admin:password`,
-cambia las dos variables en el servidor y vuelve a desplegar. Cambiar el
-`SESSION_SECRET` cierra además todas las sesiones abiertas.
+**Si se filtra una contraseña**: genera otra línea con
+`npm run admin:password`, sustituye la de esa persona en `ADMIN_USERS` y
+vuelve a desplegar. Las demás cuentas no se tocan. Si quieres echar a alguien
+de inmediato, cambia también el `SESSION_SECRET`: eso cierra todas las
+sesiones abiertas.
 
 ---
 

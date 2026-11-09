@@ -9,9 +9,13 @@ import {
 /**
  * The login for /admin.
  *
- * One shared account, which is what the project needs: a password that the
- * team knows, checked against a hash kept in an environment variable. No
- * database, no user table, nothing stored about anybody.
+ * A short list of accounts kept in an environment variable: one line per
+ * person, each with their own password hash. No database, no user table,
+ * nothing stored about anybody beyond those lines.
+ *
+ * Separate accounts rather than one shared password, because a password you
+ * have to send someone over a chat is a password you cannot take back, and
+ * because the commit each save produces then says who made it.
  *
  * Everything here uses node:crypto. Rolling your own crypto is a bad idea;
  * calling the platform's is not, and it keeps the dependency count at zero.
@@ -138,9 +142,13 @@ export function sessionCookieOptions(secure: boolean) {
 
 // ------------------------------------------------------------ configuration
 
-export interface AdminConfig {
+export interface AdminUser {
   email: string;
   passwordHash: string;
+}
+
+export interface AdminConfig {
+  users: AdminUser[];
   sessionSecret: string;
 }
 
@@ -151,15 +159,56 @@ export interface AdminConfig {
  * uses that to explain what has not been set up yet, instead of showing a
  * crash to whoever happens to open it.
  */
+/**
+ * Reads ADMIN_USERS: one account per line, as `correo hash`. Lines that do
+ * not look like an account are skipped rather than failing the whole login,
+ * so one bad paste cannot lock everybody out.
+ */
 export function readAdminConfig(env: Record<string, string | undefined>): AdminConfig | null {
-  const email = env.ADMIN_EMAIL?.trim().toLowerCase();
-  const passwordHash = env.ADMIN_PASSWORD_HASH?.trim();
   const sessionSecret = env.SESSION_SECRET?.trim();
+  if (!sessionSecret || sessionSecret.length < 32) return null;
 
-  if (!email || !passwordHash || !sessionSecret) return null;
-  if (sessionSecret.length < 32) return null;
+  const users = (env.ADMIN_USERS ?? '')
+    // Split on newlines only; trimming each line takes care of carriage
+    // returns, which a value pasted from Windows will carry.
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const separator = line.search(/\s/);
+      if (separator < 0) return null;
+      const email = line.slice(0, separator).trim().toLowerCase();
+      const passwordHash = line.slice(separator).trim();
+      return email.includes('@') && passwordHash.includes(':')
+        ? { email, passwordHash }
+        : null;
+    })
+    .filter((user): user is AdminUser => user !== null);
 
-  return { email, passwordHash, sessionSecret };
+  return users.length > 0 ? { users, sessionSecret } : null;
+}
+
+/**
+ * A hash of nothing in particular, verified against when no account matches.
+ *
+ * Without it, an unknown address would be refused instantly while a known
+ * one took the time scrypt needs - which is a way of asking the login which
+ * addresses exist.
+ */
+const DECOY_HASH =
+  '0000000000000000000000000000000000000000000000000000000000000000:' +
+  '0'.repeat(128);
+
+/** The account for an address, or null. Always costs the same either way. */
+export async function authenticate(
+  email: string,
+  password: string,
+  users: AdminUser[],
+): Promise<AdminUser | null> {
+  const wanted = email.trim().toLowerCase();
+  const found = users.find((user) => emailMatches(wanted, user.email)) ?? null;
+  const ok = await verifyPassword(password, found?.passwordHash ?? DECOY_HASH);
+  return ok ? found : null;
 }
 
 /** Case-insensitive, constant-time address comparison. */

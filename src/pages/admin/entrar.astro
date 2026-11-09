@@ -10,13 +10,7 @@ export const prerender = false;
 
 import Admin from '@/layouts/Admin.astro';
 import { checkSetup, adminConfig, currentUser, env } from '@/lib/admin-guard';
-import {
-  createSession,
-  emailMatches,
-  sessionCookieOptions,
-  verifyPassword,
-  SESSION_COOKIE,
-} from '@/lib/auth';
+import { authenticate, createSession, sessionCookieOptions, SESSION_COOKIE } from '@/lib/auth';
 
 const setup = checkSetup(env());
 
@@ -35,13 +29,12 @@ if (Astro.request.method === 'POST' && setup.ready) {
   const config = adminConfig();
 
   if (config) {
-    const ok =
-      emailMatches(email, config.email) && (await verifyPassword(password, config.passwordHash));
+    const account = await authenticate(email, password, config.users);
 
-    if (ok) {
+    if (account) {
       Astro.cookies.set(
         SESSION_COOKIE,
-        createSession(config.email, config.sessionSecret),
+        createSession(account.email, config.sessionSecret),
         sessionCookieOptions(Astro.url.protocol === 'https:'),
       );
       return Astro.redirect('/admin/', 303);

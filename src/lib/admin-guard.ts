@@ -14,8 +14,7 @@ export type Setup =
 /** Which environment variables are still missing, if any. */
 export function checkSetup(env: Record<string, string | undefined>): Setup {
   const missing: string[] = [];
-  if (!env.ADMIN_EMAIL?.trim()) missing.push('ADMIN_EMAIL');
-  if (!env.ADMIN_PASSWORD_HASH?.trim()) missing.push('ADMIN_PASSWORD_HASH');
+  if (!env.ADMIN_USERS?.trim()) missing.push('ADMIN_USERS');
   if (!env.SESSION_SECRET?.trim() || env.SESSION_SECRET.trim().length < 32) {
     missing.push('SESSION_SECRET');
   }
